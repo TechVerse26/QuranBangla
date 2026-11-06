@@ -1,0 +1,109 @@
+/* ==== লগইন হিস্টোরি ও সক্রিয় সেশন মোডাল (js/session-security.js) ==== */
+
+.session-history-box{ max-width: 460px; }
+.session-history-hint{
+  margin: 0 0 14px; color: var(--ink-soft); font-size: 12.5px; line-height: 1.7;
+}
+.session-loading{
+  text-align: center; padding: 22px 10px; color: var(--ink-soft); font-size: 13px;
+}
+.session-history-summary{
+  font-size: 11.5px; color: var(--ink-soft); background: var(--parchment);
+  border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.session-list{
+  display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto;
+}
+
+/* ---- প্রতিটি সেশন = একটি স্বতন্ত্র বর্ডারওয়ালা কার্ড ---- */
+.session-item{
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 12px 12px 11px;
+}
+.session-item-current{ border-color: rgba(46,158,91,.4); background: rgba(46,158,91,.05); }
+
+.session-item-top{ display: flex; align-items: flex-start; gap: 10px; }
+.session-item-icon{
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--parchment); color: var(--ink); font-size: 16px;
+  border: 1px solid var(--line);
+}
+.session-item-headline{ flex: 1; min-width: 0; }
+.session-item-title-row{ display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.session-item-title{ font-weight: 700; font-size: 13.5px; color: var(--ink); }
+
+.session-item-status-row{
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 5px;
+}
+.session-status-text{
+  font-size: 11px; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 5px;
+}
+.session-status-text.is-online{ color: #2E9E5B; font-weight: 600; }
+
+.session-badge{
+  font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+  letter-spacing: .2px; border: 1px solid transparent;
+}
+.session-badge-current{ background: rgba(46,158,91,.15); color: #227A47; }
+.session-badge-new{ background: rgba(243,201,105,.22); color: #8A6D1F; }
+.session-badge-mfa{ background: rgba(14,59,54,.12); color: var(--teal); }
+.session-badge-muted{
+  font-size: 10px; color: var(--ink-soft); background: transparent;
+  border: 1px dashed var(--line); padding: 3px 8px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+.session-device-badge{
+  font-size: 10.5px; color: var(--ink-soft); background: var(--parchment);
+  border: 1px solid var(--line); border-radius: 20px; padding: 2px 8px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+.session-online-dot{
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.session-online-dot.online{ background: #2E9E5B; box-shadow: 0 0 0 3px rgba(46,158,91,.18); }
+.session-online-dot.offline{ background: #B9B2A0; }
+
+.session-revoke-btn{
+  background: none; border: 1px solid var(--line); color: #C0392B;
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer;
+}
+.session-revoke-btn:active{ background: rgba(192,57,43,.08); }
+.session-revoke-btn:disabled{ opacity: .5; }
+
+/* ---- প্রতিটি তথ্য নিজের বর্ডার-বক্স ("চিপ") হিসেবে — যাতে কোনটা কীসের জন্য
+   তা এক নজরেই আলাদা করে বোঝা যায়, সব একলাইনে গাদাগাদি না থাকে ---- */
+.session-info-grid{
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px; margin-top: 10px;
+}
+.session-info-chip{
+  display: flex; align-items: center; gap: 7px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--parchment);
+  padding: 6px 8px; min-width: 0;
+}
+.session-info-chip i{ color: var(--ink-soft); font-size: 12px; flex-shrink: 0; width: 14px; text-align: center; }
+.session-info-chip-text{ min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.session-info-chip-label{ font-size: 9.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .3px; }
+.session-info-chip-value{
+  font-size: 11.5px; color: var(--ink); font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.session-item-extra{
+  margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.session-map-link{
+  font-size: 11px; color: var(--ink); text-decoration: none; opacity: .85;
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1px solid var(--line); border-radius: 20px; padding: 3px 9px;
+}
+.session-map-link:active{ opacity: 1; }
+
+@media (max-width: 380px){
+  .session-info-grid{ grid-template-columns: 1fr; }
+}

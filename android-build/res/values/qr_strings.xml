@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="qr_shortcut_continue_short">Continue</string>
+    <string name="qr_shortcut_continue_long">Continue reading</string>
+    <string name="qr_shortcut_search_short">Search</string>
+    <string name="qr_shortcut_search_long">Search the Quran</string>
+    <string name="qr_shortcut_prayer_short">Prayer</string>
+    <string name="qr_shortcut_prayer_long">Prayer times</string>
+    <string name="qr_shortcut_qibla_short">Qibla</string>
+    <string name="qr_shortcut_qibla_long">Qibla direction</string>
+</resources>

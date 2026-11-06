@@ -1,0 +1,26 @@
+/* ==== topics.css — topics list & detail view ==== */
+
+/* ---- Topics (clean line-icon list, redesigned) ---- */
+#topicsListContainer{padding:2px 0 10px;}
+.topic-item{
+  display:flex;align-items:center;gap:14px;padding:14px 6px;cursor:pointer;
+  border-bottom:1px solid var(--line);transition:background .15s ease;
+}
+.topic-item:first-child{border-top:1px solid var(--line);}
+.topic-item:hover{background:var(--sage);}
+.topic-item:active{background:var(--gold-soft);}
+.topic-icon-box{
+  width:46px;height:46px;flex-shrink:0;border-radius:14px;background:var(--panel);
+  display:flex;align-items:center;justify-content:center;color:var(--ink-soft);
+}
+body.theme-dark-accent .topic-icon-box{color:var(--gold);}
+.topic-item .li-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.topic-item .li-title{font-size:15.5px;font-weight:600;}
+.topic-sub-en{font-family:'Hind Siliguri',sans-serif;font-size:12px;color:var(--ink-soft);opacity:.85;}
+.topic-chevron{flex-shrink:0;color:var(--ink-soft);opacity:.5;}
+
+.topic-detail-head{display:flex;align-items:center;gap:14px;margin:4px 4px 18px;}
+.topic-icon-box-lg{width:52px;height:52px;border-radius:16px;}
+.topic-detail-title{font-family:'Noto Serif Bengali',serif;font-size:18px;font-weight:700;margin:0;}
+.topic-detail-sub{margin-top:2px;}
+

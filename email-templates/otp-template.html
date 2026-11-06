@@ -1,0 +1,99 @@
+<!--
+  EmailJS টেমপ্লেট — "কুরআন বাংলা" অ্যাপের থিমের সাথে মিলিয়ে বানানো।
+
+  কীভাবে বসাবেন:
+  1) emailjs.com → Email Templates → আপনার টেমপ্লেট খুলুন
+  2) টেমপ্লেট এডিটরের উপরে ডানদিকে "</>" (Code Editor / Source) আইকনে ক্লিক করুন
+  3) ভেতরের পুরো HTML মুছে এই ফাইলের পুরো কনটেন্ট পেস্ট করুন
+  4) Subject ফিল্ডে বসান:  {{purpose}} — যাচাইকরণ কোড
+  5) Save করুন
+
+  ভ্যারিয়েবল (js/otp.js থেকে এগুলোই পাঠানো হয়, নাম হুবহু মিলতে হবে):
+    {{to_name}}   → প্রাপকের নাম
+    {{purpose}}   → "পাসওয়ার্ড পরিবর্তন" বা "অ্যাকাউন্ট স্থায়ীভাবে মুছে ফেলা"
+    {{otp_code}}  → ৬-সংখ্যার কোড
+    {{to_email}}  → প্রাপকের ইমেইল (ফুটারে দেখানোর জন্য)
+-->
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>যাচাইকরণ কোড</title>
+</head>
+<body style="margin:0;padding:0;background-color:#EAE2CC;font-family:'Noto Sans Bengali','Segoe UI',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EAE2CC;padding:28px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#F3ECDC;border-radius:18px;overflow:hidden;border:1px solid #D8CDB0;">
+
+          <!-- হেডার -->
+          <tr>
+            <td align="center" style="background-color:#1E2A26;padding:26px 24px 22px;">
+              <div style="font-size:26px;line-height:1;margin-bottom:6px;">☪️</div>
+              <div style="color:#E8D6A8;font-size:19px;font-weight:700;letter-spacing:.3px;">কুরআন বাংলা</div>
+              <div style="color:#B9C4BC;font-size:12.5px;margin-top:4px;">অ্যাকাউন্ট নিরাপত্তা যাচাইকরণ</div>
+            </td>
+          </tr>
+
+          <!-- মূল কনটেন্ট -->
+          <tr>
+            <td style="padding:30px 28px 8px;">
+              <p style="margin:0 0 4px;color:#1E2A26;font-size:15px;">আসসালামু আলাইকুম, <b>{{to_name}}</b>,</p>
+              <p style="margin:14px 0 0;color:#4B5A54;font-size:14px;line-height:1.7;">
+                আপনার অ্যাকাউন্টে <b style="color:#1E2A26;">{{purpose}}</b> সম্পন্ন করার জন্য নিচের কোডটি যাচাই করুন। এটি চাননি? নিচে দেখুন।
+              </p>
+            </td>
+          </tr>
+
+          <!-- OTP কোড বক্স -->
+          <tr>
+            <td align="center" style="padding:14px 24px 6px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:340px;background-color:#FFFFFF;border:1.5px dashed #C0973A;border-radius:14px;">
+                <tr>
+                  <td align="center" style="padding:20px 16px;">
+                    <div style="color:#7A6650;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">যাচাইকরণ কোড</div>
+                    <div style="color:#1E2A26;font-size:34px;font-weight:800;letter-spacing:9px;font-family:'Courier New',monospace;">{{otp_code}}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- মেয়াদ / সতর্কতা -->
+          <tr>
+            <td style="padding:18px 28px 4px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#E8D6A8;border-radius:10px;">
+                <tr>
+                  <td style="padding:12px 16px;color:#3B2A1E;font-size:12.5px;line-height:1.6;">
+                    ⏱️ এই কোডটি <b>৫ মিনিট</b> পর্যন্ত বৈধ থাকবে।<br>
+                    🔒 এই কোড কারো সাথে শেয়ার করবেন না — কুরআন বাংলা টিম কখনও এই কোড চাইবে না।
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- আপনি না চাইলে -->
+          <tr>
+            <td style="padding:18px 28px 26px;">
+              <p style="margin:0;color:#7A6650;font-size:12.5px;line-height:1.7;">
+                আপনি যদি এই অনুরোধ না করে থাকেন, তাহলে এই ইমেইলটি উপেক্ষা করুন — আপনার অ্যাকাউন্টে কোনো পরিবর্তন হবে না। কেউ আপনার অ্যাকাউন্ট অ্যাক্সেসের চেষ্টা করছে মনে হলে দ্রুত পাসওয়ার্ড পরিবর্তন করুন।
+              </p>
+            </td>
+          </tr>
+
+          <!-- ফুটার -->
+          <tr>
+            <td align="center" style="background-color:#E8D6A8;padding:16px 24px;border-top:1px solid #D8CDB0;">
+              <div style="color:#7A6650;font-size:11px;">এই মেইলটি {{to_email}}-এ পাঠানো হয়েছে</div>
+              <div style="color:#A8946E;font-size:11px;margin-top:4px;">© কুরআন বাংলা — জাযাকাল্লাহু খইরন</div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

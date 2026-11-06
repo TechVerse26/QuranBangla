@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher shortcuts (long-press the app icon). Each one opens the app with a quranbangla:// link that
+     app/js/notifications.js (QRApp.deeplink) turns into a screen. __APP_ID__ is filled in by apply-native-patches.mjs. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="qr_continue"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_continue"
+        android:shortcutShortLabel="@string/qr_shortcut_continue_short"
+        android:shortcutLongLabel="@string/qr_shortcut_continue_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="quranbangla://continue"
+            android:targetPackage="__APP_ID__"
+            android:targetClass="__APP_ID__.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="qr_search"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_search"
+        android:shortcutShortLabel="@string/qr_shortcut_search_short"
+        android:shortcutLongLabel="@string/qr_shortcut_search_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="quranbangla://search"
+            android:targetPackage="__APP_ID__"
+            android:targetClass="__APP_ID__.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="qr_prayer"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_prayer"
+        android:shortcutShortLabel="@string/qr_shortcut_prayer_short"
+        android:shortcutLongLabel="@string/qr_shortcut_prayer_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="quranbangla://prayer"
+            android:targetPackage="__APP_ID__"
+            android:targetClass="__APP_ID__.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="qr_qibla"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_qibla"
+        android:shortcutShortLabel="@string/qr_shortcut_qibla_short"
+        android:shortcutLongLabel="@string/qr_shortcut_qibla_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="quranbangla://qibla"
+            android:targetPackage="__APP_ID__"
+            android:targetClass="__APP_ID__.MainActivity" />
+    </shortcut>
+</shortcuts>

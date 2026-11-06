@@ -1,0 +1,31 @@
+প্রয়োজনীয় ম্যানুয়াল সেটআপ (একবারই করতে হবে)
+================================================
+
+১) Firebase Console → Project settings → Cloud Messaging ট্যাব →
+   "Web configuration" → Web Push certificates → Generate key pair
+   → এই key কপি করে js/push.js ফাইলের VAPID_KEY ভ্যারিয়েবলে বসান
+   (এখন লেখা আছে: PASTE_YOUR_VAPID_PUBLIC_KEY_HERE)
+
+২) Firebase Console → Project settings → Service accounts →
+   Generate new private key → JSON ফাইল ডাউনলোড হবে
+
+৩) GitHub repo → Settings → Secrets and variables → Actions →
+   New repository secret
+   নাম: FIREBASE_SERVICE_ACCOUNT
+   ভ্যালু: ডাউনলোড করা JSON ফাইলের পুরো কন্টেন্ট
+
+৪) Firebase Console → Firestore Database → Rules — নিচের অংশটুকু
+   আপনার বিদ্যমান rules-এর ভেতরে (users rule-এর পাশে) যোগ করুন:
+
+   match /push_subscriptions/{deviceId} {
+     allow read, delete: if false;
+     allow create, update: if request.resource.data.keys().hasOnly(['token','lat','lon','method','updatedAt'])
+       && request.resource.data.token is string
+       && request.resource.data.lat is number && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
+       && request.resource.data.lon is number && request.resource.data.lon >= -180 && request.resource.data.lon <= 180;
+   }
+
+৫) GitHub repo public রাখুন (নাহলে GitHub Actions মাসে মাত্র ২০০০ মিনিট
+   ফ্রি পাবে, প্রতি ১০ মিনিটে চালালে সেটা পার হয়ে যাবে)
+
+৬) সব ফাইল GitHub-এ push/deploy করুন — এরপর থেকে সব অটোমেটিক চলবে।

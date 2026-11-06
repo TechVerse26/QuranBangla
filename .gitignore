@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.vercel/
+.DS_Store
+Thumbs.db
+*.log
+*.pem
+*.key
+service-account*.json
+firebase-adminsdk*.json
+google-services.json

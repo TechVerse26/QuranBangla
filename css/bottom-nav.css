@@ -1,0 +1,17 @@
+/* ==== bottom-nav.css — fixed bottom navigation bar ==== */
+
+/* ---- Bottom navigation ---- */
+.bottom-nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:56;height:var(--bottomnav-h);
+  background:var(--nav-bg, var(--teal));display:flex;box-shadow:0 -4px 16px rgba(0,0,0,.18);width:100%;
+  backdrop-filter:var(--nav-blur, none);-webkit-backdrop-filter:var(--nav-blur, none);
+}
+.bn-item{
+  flex:1;background:none;border:none;color:rgba(220,230,222,.65);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;font-family:var(--font-ui,'Hind Siliguri'),sans-serif;font-size:10.5px;
+  cursor:pointer;padding:6px 2px;
+}
+.bn-item svg{stroke:currentColor;}
+.bn-item.active{color:var(--nav-accent, var(--gold));}
+.player-bar{ bottom:var(--bottomnav-h); }
+

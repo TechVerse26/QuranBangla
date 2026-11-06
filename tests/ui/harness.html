@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>story moderation UI harness</title>
+<!-- the real site tokens + the real stylesheet under test -->
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/story-moderation.css">
+<style>
+  body{margin:0;background:var(--parchment);color:var(--ink);font-family:'Hind Siliguri',system-ui,sans-serif;}
+  /* a stand-in for the dark composer stage the banner is placed in (the real one is .status-comp-stage { position:relative }) */
+  #statusCompStage{position:relative;height:260px;background:#10231e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;}
+</style>
+</head>
+<body data-theme="emerald">
+  <div id="statusCompStage">স্টোরির লেখা এখানে</div>
+  <span id="apStoriesBadge-standalone" hidden></span>
+
+<script>
+  // ---- stubs of the globals the real application provides
+  window.toBn = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
+  window.__toasts = [];
+  window.showToast = (m) => { window.__toasts.push(m); };
+  window.state = { user: { uid: 'alice', name: 'Alice Rahman' } };
+  window.__tokenCalls = [];
+  window.__token = 'alice';
+  window.fbAuth = { currentUser: { uid: 'alice', email: 'alice@example.com', getIdToken: async (force) => { window.__tokenCalls.push(!!force); return window.__token; } } };
+  window.activeSlide = () => window.__slide || null;
+
+  // ---- the admin panel (real js/admin.js) talks to Firestore directly for exams/music/errors: absorb those calls
+  const chain = new Proxy(function () {}, {
+    get: (t, p) => {
+      if (p === 'onSnapshot') return (cb) => { try { cb({ docs: [], size: 0, empty: true, forEach() {} , docChanges: () => [] }); } catch (e) {} return () => {}; };
+      if (p === 'get') return async () => ({ exists: true, data: () => ({ isAdmin: window.__isAdmin !== false }), docs: [], size: 0, empty: true, forEach() {} });
+      return chain;
+    },
+    apply: () => chain,
+  });
+  window.fbDb = chain;
+  window.firebase = { firestore: Object.assign(() => chain, { Timestamp: { fromDate: (d) => d, now: () => new Date() } }), auth: () => window.fbAuth };
+  window.__isAdmin = true;
+</script>
+<script src="/js/story-moderation.js"></script>
+<script src="/js/admin-moderation.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

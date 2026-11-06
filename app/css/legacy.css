@@ -1,0 +1,268 @@
+/* ==========================================================================
+   Quran Bangla — ANDROID APP · re-skin of the reused website screens
+   --------------------------------------------------------------------------
+   Planner · Topics · Hadith · Statistics · Exams · Profile and the website's
+   feature modals (prayer times, qibla, dictionary, AI tafsir, taraweeh,
+   download manager, sign-in flow) are the website's own screens: their
+   markup, logic and data are reused unchanged. This file only gives them the
+   app's look (flat surfaces, hairlines, full-screen pages instead of popups)
+   and fixes the places where they assumed the website's header / bottom bar.
+   Everything is scoped to html[data-platform="android-app"].
+   ========================================================================== */
+
+/* ---------- 1. page-level decoration of the website is switched off ---------- */
+html[data-platform="android-app"] body[data-ramadan]{
+  animation:none;background-image:none;
+}
+html[data-platform="android-app"] body.onb-active{overflow:auto;}
+
+/* ---------- 2. hosted website screens ---------- */
+/* one flat look: no shadows / glow on the reused surfaces */
+html[data-platform="android-app"] .app-shell *,
+html[data-platform="android-app"] .app-modal *,
+html[data-platform="android-app"] .auth-overlay *{
+  box-shadow:none;text-shadow:none;
+}
+html[data-platform="android-app"] .app-shell .view{animation:none;}
+/* the website's fixed "← back" strips are replaced by the app top bar (still clickable by the back handler) */
+html[data-platform="android-app"] .back-btn + *{margin-top:0 !important;}
+
+html[data-platform="android-app"] .app-shell .section-title{
+  font-family:var(--qa-font-ui);font-size:13px;font-weight:700;letter-spacing:.3px;color:var(--qa-text-3);
+  margin:var(--qa-s-6) var(--qa-s-1) var(--qa-s-2);
+}
+html[data-platform="android-app"] .app-shell .section-title:first-child{margin-top:var(--qa-s-1);}
+
+/* tabs -> the app's segmented control */
+html[data-platform="android-app"] .app-shell .tabs{
+  gap:2px;padding:3px;margin-bottom:var(--qa-s-3);
+  background:var(--qa-surface-2);border-radius:var(--qa-r-full);
+}
+html[data-platform="android-app"] .app-shell .tabs button{
+  min-height:38px;padding:0 var(--qa-s-4);border-radius:var(--qa-r-full);
+  font-family:var(--qa-font-ui);font-size:14px;font-weight:600;color:var(--qa-text-2);
+}
+html[data-platform="android-app"] .app-shell .tabs button.active{
+  background:var(--qa-surface);color:var(--qa-text);font-weight:700;box-shadow:0 0 0 1px var(--qa-outline);
+}
+html[data-platform="android-app"] .app-shell .chip{
+  min-height:36px;padding:0 var(--qa-s-4);border-radius:var(--qa-r-full);
+  border:1px solid var(--qa-outline-strong);background:transparent;color:var(--qa-text);
+  font-family:var(--qa-font-ui);font-size:14px;
+}
+html[data-platform="android-app"] .app-shell .chip:active{background:var(--qa-surface-2);}
+
+/* simple list rows */
+html[data-platform="android-app"] .app-shell .list-item{
+  min-height:56px;padding:var(--qa-s-3) var(--qa-s-2);border-bottom:1px solid var(--qa-outline);
+}
+html[data-platform="android-app"] .app-shell .list-item:first-child{border-top:1px solid var(--qa-outline);}
+html[data-platform="android-app"] .app-shell .list-item:hover{background:transparent;}
+html[data-platform="android-app"] .app-shell .list-item:active{background:var(--qa-surface-2);}
+
+/* loaders / empty / error states */
+html[data-platform="android-app"] .loader{padding:var(--qa-s-10) 0;color:var(--qa-text-3);}
+html[data-platform="android-app"] .spinner{border-color:var(--qa-outline-strong);border-top-color:var(--qa-primary);}
+html[data-platform="android-app"] .error-box{color:var(--qa-text-2);}
+html[data-platform="android-app"] .error-box button{
+  min-height:44px;padding:0 var(--qa-s-5);border-radius:var(--qa-r-full);
+  background:var(--qa-primary);color:var(--qa-on-primary);font-weight:700;
+}
+
+/* form controls inside the reused screens */
+html[data-platform="android-app"] .app-shell input[type="text"],
+html[data-platform="android-app"] .app-shell input[type="search"],
+html[data-platform="android-app"] .app-shell input[type="number"],
+html[data-platform="android-app"] .app-shell input[type="email"],
+html[data-platform="android-app"] .app-shell input[type="password"],
+html[data-platform="android-app"] .app-shell textarea,
+html[data-platform="android-app"] .app-shell select,
+html[data-platform="android-app"] .app-modal input[type="text"],
+html[data-platform="android-app"] .app-modal input[type="search"],
+html[data-platform="android-app"] .app-modal input[type="number"],
+html[data-platform="android-app"] .app-modal textarea,
+html[data-platform="android-app"] .app-modal select{
+  font-size:16px;     /* 16px stops Android from zooming the page on focus */
+}
+
+/* ---------- 3. website feature modals -> full-screen app pages ---------- */
+html[data-platform="android-app"] .app-modal{
+  padding:0;align-items:stretch;justify-content:stretch;
+  background:var(--qa-bg);
+}
+html[data-platform="android-app"] .app-modal-box{
+  max-width:none;width:100%;height:100%;max-height:none;
+  border-radius:0;background:var(--qa-bg);
+}
+html[data-platform="android-app"] .app-modal-head{
+  min-height:calc(56px + var(--qa-safe-top));
+  padding:var(--qa-safe-top) calc(var(--qa-s-2) + var(--qa-safe-right)) 0 calc(var(--qa-s-4) + var(--qa-safe-left));
+  border-bottom:1px solid var(--qa-outline);background:var(--qa-surface);
+}
+html[data-platform="android-app"] .app-modal-head h3{
+  font-family:var(--qa-font-ui);font-size:18px;font-weight:700;color:var(--qa-text);
+}
+html[data-platform="android-app"] .app-modal-head h3 i{color:var(--qa-accent);}
+html[data-platform="android-app"] .app-modal-close,
+html[data-platform="android-app"] .app-modal-back{
+  width:48px;height:48px;border-radius:var(--qa-r-full);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:var(--qa-text-2);
+}
+html[data-platform="android-app"] .app-modal-close:active,
+html[data-platform="android-app"] .app-modal-back:active{background:var(--qa-surface-3);}
+html[data-platform="android-app"] .app-modal-body{
+  flex:1 1 auto;min-height:0;
+  padding:var(--qa-s-4) calc(var(--qa-s-4) + var(--qa-safe-right)) calc(var(--qa-s-6) + var(--qa-safe-bottom)) calc(var(--qa-s-4) + var(--qa-safe-left));
+  width:100%;max-width:var(--qa-content-max);margin:0 auto;
+}
+html[data-platform="android-app"] .app-modal-search{
+  margin:var(--qa-s-3) var(--qa-s-4) 0;background:var(--qa-surface-2);
+}
+/* the exam consent / similar small dialogs keep a card look in the middle of the screen */
+html[data-platform="android-app"] #examConsentModal{
+  align-items:center;justify-content:center;padding:var(--qa-s-4);background:var(--qa-scrim);
+}
+html[data-platform="android-app"] #examConsentModal .app-modal-box{
+  height:auto;max-height:90vh;max-height:90dvh;max-width:440px;
+  border-radius:var(--qa-r-xl);border:1px solid var(--qa-outline);background:var(--qa-surface);
+}
+html[data-platform="android-app"] #examConsentModal .app-modal-head{min-height:56px;padding-top:0;}
+html[data-platform="android-app"] #examConsentModal .app-modal-body{padding-bottom:var(--qa-s-5);}
+html[data-platform="android-app"] .exam-consent-btn{
+  min-height:44px;border-radius:var(--qa-r-full);font-family:var(--qa-font-ui);font-size:15px;font-weight:700;
+}
+/* The website's small dialogs (delete account, e-mail code, re-enter password, sign out, change password, two-step
+   sign-in ...) all use .input-box-modal. They are shown as a card in the middle of the screen, like the app's own
+   dialogs, instead of an almost empty full-screen page; the large feature modals above stay full-screen pages.
+   (:has() needs a WebView based on Chrome 105 or newer; an older one simply keeps the full-screen page, which works too.) */
+html[data-platform="android-app"] .app-modal:has(> .input-box-modal){
+  align-items:center;justify-content:center;
+  padding:var(--qa-s-4) calc(var(--qa-s-4) + var(--qa-safe-right)) var(--qa-s-4) calc(var(--qa-s-4) + var(--qa-safe-left));
+  background:var(--qa-scrim);
+}
+html[data-platform="android-app"] .app-modal > .input-box-modal{
+  height:auto;max-height:90vh;max-height:90dvh;max-width:420px;
+  border-radius:var(--qa-r-xl);border:1px solid var(--qa-outline);background:var(--qa-surface);
+}
+html[data-platform="android-app"] .app-modal > .input-box-modal .app-modal-head{
+  min-height:56px;padding:0 var(--qa-s-2) 0 var(--qa-s-5);border-bottom:0;background:transparent;
+}
+html[data-platform="android-app"] .app-modal > .input-box-modal .app-modal-body{
+  flex:0 1 auto;max-width:none;padding:var(--qa-s-1) var(--qa-s-5) var(--qa-s-5);
+}
+html[data-platform="android-app"] .input-box-actions{gap:var(--qa-s-2);flex-wrap:wrap;}
+html[data-platform="android-app"] .input-box-actions button{
+  min-height:44px;padding:0 var(--qa-s-5);border:0;border-radius:var(--qa-r-full);
+  font-family:var(--qa-font-ui);font-size:15px;font-weight:700;
+}
+html[data-platform="android-app"] .input-box-actions .tw-cancel-btn{background:transparent;color:var(--qa-primary);}
+html[data-platform="android-app"] .input-box-actions .tw-save-btn{background:var(--qa-primary);color:var(--qa-on-primary);}
+html[data-platform="android-app"] .input-box-actions .profile-delete-confirm-btn{
+  background:var(--qa-danger-container) !important;color:var(--qa-danger) !important;border-color:transparent !important;
+}
+html[data-platform="android-app"] .input-box-actions button:disabled{opacity:.5;}
+
+/* sign-in / sign-up / forgot-password flow (website overlay + the profile page) */
+html[data-platform="android-app"] .auth-overlay{background:var(--qa-bg);}
+html[data-platform="android-app"] .auth-topbar{
+  padding:calc(var(--qa-s-3) + var(--qa-safe-top)) var(--qa-s-4) var(--qa-s-3);
+  background:var(--qa-surface);color:var(--qa-text);border-bottom:1px solid var(--qa-outline);
+  font-family:var(--qa-font-ui);font-size:18px;
+}
+html[data-platform="android-app"] .auth-back{
+  width:44px;height:44px;margin:-6px 0 -6px -8px;border-radius:var(--qa-r-full);color:var(--qa-text);
+}
+html[data-platform="android-app"] .auth-body{padding-bottom:calc(60px + var(--qa-safe-bottom));}
+html[data-platform="android-app"] .auth-field{font-size:16px;border-radius:var(--qa-r-md);}
+html[data-platform="android-app"] .auth-field:focus{border-color:var(--qa-primary);}
+/* the profile page shows its sign-in screens under the app's own top bar, which already carries the title and the back
+   button (the website's inner bar would repeat both; the back handler clicks its arrow programmatically, so it keeps working) */
+html[data-platform="android-app"] .profile-page-auth .auth-topbar{display:none;}
+html[data-platform="android-app"] .auth-title{font-family:var(--qa-font-ui);font-weight:700;}
+html[data-platform="android-app"] .auth-error{color:var(--qa-danger);}
+/* the primary buttons of the sign-in flow use the app's colour instead of the website's gold gradient */
+html[data-platform="android-app"] .profile-page-auth .auth-cta-btn,
+html[data-platform="android-app"] .auth-overlay .auth-cta-btn{
+  min-height:52px;border:0;border-radius:var(--qa-r-full);
+  background:var(--qa-primary);background-image:none;color:var(--qa-on-primary);
+  font-family:var(--qa-font-ui);font-size:16px;font-weight:700;box-shadow:none;
+}
+html[data-platform="android-app"] .profile-page-auth .auth-switch a,
+html[data-platform="android-app"] .auth-overlay .auth-switch a{color:var(--qa-primary);}
+html[data-platform="android-app"] .auth-social-divider,
+html[data-platform="android-app"] .auth-social-row{display:none;}   /* providers refuse embedded WebViews */
+
+/* ---------- 4. audio mini player (the website's player, re-skinned) ---------- */
+html[data-platform="android-app"] #playerBar{
+  /* the website player was written for a dark teal bar: give it the app's tonal surface instead */
+  --player-bg:var(--qa-surface);
+  --player-text-color:var(--qa-text);
+  --player-accent-bg:var(--qa-primary);
+  --player-accent-text:var(--qa-on-primary);
+  --sage:var(--qa-text);
+  --ink-soft:var(--qa-text-3);
+  --border:var(--qa-outline);
+
+  bottom:var(--qa-nav-offset,0px);
+  z-index:var(--qa-z-player);
+  background:var(--qa-surface);color:var(--qa-text);
+  border-top:1px solid var(--qa-outline);
+  box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+  transition:transform var(--qa-dur-3) var(--qa-ease), visibility 0s linear var(--qa-dur-3);
+}
+html[data-platform="android-app"] #playerBar.visible{transition:transform var(--qa-dur-3) var(--qa-ease), visibility 0s;}
+/* a hidden player must neither cover the bottom navigation nor be reachable by keyboard / screen reader */
+html[data-platform="android-app"] #playerBar:not(.visible){visibility:hidden;pointer-events:none;}
+html.qa-nav-hidden[data-platform="android-app"] #playerBar{padding-bottom:var(--qa-safe-bottom);}
+@media (min-width:840px){
+  html[data-platform="android-app"] #playerBar{padding-bottom:var(--qa-safe-bottom);}
+}
+/* --player-h is the covered height here (js/nav.js): the collapsed row must not read it, or the bar would grow */
+html[data-platform="android-app"] .player-collapsed{min-height:60px;padding:var(--qa-s-2) var(--qa-s-3) var(--qa-s-2) var(--qa-s-4);}
+html[data-platform="android-app"] .pc-play-btn::before{background:var(--qa-primary);box-shadow:none;animation:none;}
+html[data-platform="android-app"] .pc-ring{filter:none;}
+html[data-platform="android-app"] .pc-ring-bg{stroke:var(--qa-outline-strong);}
+html[data-platform="android-app"] .pc-play-btn .pc-ripple{display:none;}
+html[data-platform="android-app"] .player-info .pi-ref{color:var(--qa-accent);font-weight:600;}
+html[data-platform="android-app"] .player-info .pi-title{font-family:var(--qa-font-ui);font-size:14.5px;font-weight:600;color:var(--qa-text);}
+html[data-platform="android-app"] .pc-expand-btn,
+html[data-platform="android-app"] .player-close{
+  width:40px;height:40px;border:0;background:transparent;color:var(--qa-text-2);
+}
+html[data-platform="android-app"] .pc-expand-btn:active,
+html[data-platform="android-app"] .player-close:active{background:var(--qa-surface-3);}
+html[data-platform="android-app"] .player-expanded{border-bottom:1px solid var(--qa-outline);}
+html[data-platform="android-app"] .player-controls button,
+html[data-platform="android-app"] .speed-btn,
+html[data-platform="android-app"] .reciter-field{
+  background:var(--qa-surface-2);border:1px solid var(--qa-outline);color:var(--qa-text);
+}
+html[data-platform="android-app"] .speed-btn{color:var(--qa-primary);}
+html[data-platform="android-app"] .player-controls button:hover,
+html[data-platform="android-app"] .speed-btn:hover,
+html[data-platform="android-app"] .reciter-field:hover{background:var(--qa-surface-3);}
+html[data-platform="android-app"] .sleep-timer-popover{
+  background:var(--qa-surface);border:1px solid var(--qa-outline-strong);box-shadow:none;
+}
+html[data-platform="android-app"] .sleep-timer-popover button{color:var(--qa-text);}
+html[data-platform="android-app"] .sleep-timer-popover button:hover{background:var(--qa-surface-2);}
+html[data-platform="android-app"] .sleep-timer-popover button.active{color:var(--qa-primary);}
+html[data-platform="android-app"] .follow-ayah-btn{
+  background:var(--qa-primary);color:var(--qa-on-primary);border:0;box-shadow:none;
+  font-family:var(--qa-font-ui);font-weight:700;min-height:44px;
+}
+
+/* ---------- 5. profile page + statistics + exam + planner + topics + hadith ---------- */
+html[data-platform="android-app"] #view-profile{padding-top:0;}
+html[data-platform="android-app"] #view-profile .profile-hero{margin:0 calc(var(--qa-s-4) * -1) 4px;padding:0 var(--qa-s-4);}
+html[data-platform="android-app"] #view-profile .profile-hero-cover{border-radius:0 0 var(--qa-r-lg) var(--qa-r-lg);}
+html[data-platform="android-app"] .exam-page-head h2{font-family:var(--qa-font-ui);}
+
+/* ---------- 6. system-bar safe areas for website full-screen overlays ---------- */
+html[data-platform="android-app"] .status-overlay{padding-bottom:var(--qa-safe-bottom);}
+html[data-platform="android-app"] .dlm-hero{border-radius:var(--qa-r-lg);}
+/* download manager: the search box and the reciter menu share one row on the website; on a phone the menu was cut off at the screen edge */
+html[data-platform="android-app"] .dlm-controls{flex-wrap:wrap;}
+html[data-platform="android-app"] .dlm-search{min-width:0;flex:1 1 100%;}
+html[data-platform="android-app"] .dlm-reciter-select{flex:1 1 100%;max-width:100%;min-height:44px;}

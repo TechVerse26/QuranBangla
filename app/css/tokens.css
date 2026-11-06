@@ -1,0 +1,181 @@
+/* ==========================================================================
+   Quran Bangla — ANDROID APP design system · tokens
+   --------------------------------------------------------------------------
+   Loaded ONLY in the Android app (see js/platform.js). Every rule is scoped
+   to html[data-platform="android-app"], so nothing here can reach the website.
+
+   Visual language: calm, flat, typographic. Elevation is expressed with tonal
+   surfaces + 1px hairlines (no drop shadows, glow, blur or heavy gradients).
+   Brand colours (deep teal + gold on warm cream) are kept from the website.
+   ========================================================================== */
+
+/* --header-h is read by the website's player.js (follow-along scrolling) and by the reader to find the first visible
+   ayah. Registering it as a <length> makes getComputedStyle() return the real pixel value (top bar + status bar
+   inset) instead of an unresolved calc() string. Only loaded in the app, so the website is unaffected. */
+@property --header-h{syntax:'<length>';inherits:true;initial-value:56px;}
+
+html[data-platform="android-app"]{
+  /* ---- brand (shared identity with the website) ---- */
+  --qa-brand-teal:#0E3B36;
+  --qa-brand-teal-deep:#092723;
+  --qa-brand-gold:#C0973A;
+  --qa-brand-cream:#FBF6EC;
+
+  /* ---- shape ---- */
+  --qa-r-xs:6px;
+  --qa-r-sm:10px;
+  --qa-r-md:14px;
+  --qa-r-lg:20px;
+  --qa-r-xl:28px;
+  --qa-r-full:999px;
+
+  /* ---- spacing (4pt grid) ---- */
+  --qa-s-1:4px;
+  --qa-s-2:8px;
+  --qa-s-3:12px;
+  --qa-s-4:16px;
+  --qa-s-5:20px;
+  --qa-s-6:24px;
+  --qa-s-8:32px;
+  --qa-s-10:40px;
+
+  /* ---- typography ---- */
+  --qa-font-ui:'Hind Siliguri','Noto Sans Bengali','Segoe UI',Roboto,system-ui,sans-serif;
+  --qa-font-bn:'Noto Serif Bengali','Hind Siliguri',serif;
+  --qa-font-ar:'Amiri','Scheherazade New','Noto Naskh Arabic','Traditional Arabic',serif;
+
+  /* ---- motion ---- */
+  --qa-ease:cubic-bezier(.2,0,0,1);
+  --qa-dur-1:120ms;
+  --qa-dur-2:200ms;
+  --qa-dur-3:300ms;
+
+  /* ---- layout metrics ---- */
+  --qa-topbar-h:56px;
+  --qa-nav-h:64px;
+  --qa-rail-w:80px;
+  --qa-content-max:720px;
+  --qa-reader-max:760px;
+
+  /* Safe areas. In the APK the EdgeToEdge plugin insets the WebView natively (SystemBars insetsHandling is "disable"),
+     so these normally resolve to 0 and nothing is counted twice; they matter in a WebView/preview that reports
+     insets itself. --safe-area-inset-* is the variable Capacitor's SystemBars plugin publishes when it is set to "css". */
+  --qa-safe-top:max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,0px));
+  --qa-safe-bottom:max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,0px));
+  --qa-safe-left:max(env(safe-area-inset-left,0px),var(--safe-area-inset-left,0px));
+  --qa-safe-right:max(env(safe-area-inset-right,0px),var(--safe-area-inset-right,0px));
+
+  /* Heights the audio player and follow-along scroll logic read (js/player.js). */
+  /* !important: the website's initHeaderOffset() writes an inline --header-h (0 here, its own header is hidden) */
+  --header-h:calc(var(--qa-topbar-h) + var(--qa-safe-top)) !important;
+
+  /* z-index scale */
+  --qa-z-main:1;
+  --qa-z-nav:40;
+  --qa-z-player:45;
+  --qa-z-topbar:50;
+  --qa-z-sheet:80;
+  --qa-z-modal:90;
+  --qa-z-dialog:100;
+  --qa-z-snack:110;
+}
+
+/* ================= LIGHT ================= */
+html[data-platform="android-app"][data-qa-scheme="light"]{
+  color-scheme:light;
+  --qa-bg:#F6F4EE;
+  --qa-surface:#FFFFFF;
+  --qa-surface-2:#F0EDE4;
+  --qa-surface-3:#E7E3D6;
+  --qa-outline:#E4DFD0;
+  --qa-outline-strong:#CCC6B2;
+
+  --qa-text:#16211E;
+  --qa-text-2:#47554F;
+  --qa-text-3:#66736E;
+  --qa-text-disabled:#9AA5A0;
+
+  --qa-primary:#0E3B36;
+  --qa-on-primary:#FFFFFF;
+  --qa-primary-container:#D6EBE5;
+  --qa-on-primary-container:#08302B;
+
+  --qa-accent:#8F6A1B;
+  --qa-accent-strong:#C0973A;
+  --qa-accent-container:#F4E8C8;
+  --qa-on-accent-container:#4D3708;
+
+  --qa-danger:#B3261E;
+  --qa-danger-container:#F9DEDC;
+  --qa-success:#17694A;
+  --qa-success-container:#D8F0E4;
+  --qa-warning:#8A5A00;
+  --qa-warning-container:#FBE9C7;
+
+  --qa-scrim:rgba(12,22,20,.50);
+  --qa-ar-ink:#0F1F1B;
+  --qa-playing:#E3F1EC;
+  --qa-skeleton-a:#ECE8DC;
+  --qa-skeleton-b:#F6F3EA;
+  --qa-status-bar:#F6F4EE;
+}
+
+/* ================= DARK ================= */
+html[data-platform="android-app"][data-qa-scheme="dark"]{
+  color-scheme:dark;
+  --qa-bg:#0B1513;
+  --qa-surface:#12201D;
+  --qa-surface-2:#182A26;
+  --qa-surface-3:#20352F;
+  --qa-outline:#25382F;
+  --qa-outline-strong:#38504A;
+
+  --qa-text:#E7F0ED;
+  --qa-text-2:#B0C0BB;
+  --qa-text-3:#8497A1;
+  --qa-text-disabled:#5C6E69;
+
+  --qa-primary:#6CCBB6;
+  --qa-on-primary:#04211C;
+  --qa-primary-container:#1D4A42;
+  --qa-on-primary-container:#D2F5EC;
+
+  --qa-accent:#D9B560;
+  --qa-accent-strong:#D9B560;
+  --qa-accent-container:#3A3116;
+  --qa-on-accent-container:#F3E3B6;
+
+  --qa-danger:#F2B8B5;
+  --qa-danger-container:#4A1F1C;
+  --qa-success:#8FD9B6;
+  --qa-success-container:#173D2D;
+  --qa-warning:#F2C879;
+  --qa-warning-container:#44330F;
+
+  --qa-scrim:rgba(0,0,0,.62);
+  --qa-ar-ink:#EEF6F3;
+  --qa-playing:#1A3530;
+  --qa-skeleton-a:#182A26;
+  --qa-skeleton-b:#1F332E;
+  --qa-status-bar:#0B1513;
+}
+
+/* Hand the app palette to the website components that are reused inside the
+   app (planner, topics, hadith, stats, exam, profile, modals...). They are all
+   written against these variables (see css/base.css), so this one block makes
+   every reused screen follow the app theme automatically. */
+html[data-platform="android-app"] body,
+html[data-platform="android-app"] body[data-theme]{
+  --parchment:var(--qa-bg);
+  --panel:var(--qa-surface);
+  --ink:var(--qa-text);
+  --ink-soft:var(--qa-text-2);
+  --teal:var(--qa-primary);
+  --teal-deep:var(--qa-primary);
+  --gold:var(--qa-accent-strong);
+  --gold-soft:var(--qa-accent-container);
+  --sage:var(--qa-surface-2);
+  --line:var(--qa-outline);
+  --radius:var(--qa-r-md);
+  --bg-texture:none;
+}

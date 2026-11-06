@@ -1,0 +1,191 @@
+/* ==== exam.css — full-page "পরীক্ষা" (Exam) tab: realtime exam-link list ==== */
+
+.exam-page-head{padding:6px 4px 16px;}
+.exam-page-head h2{
+  margin:0 0 4px; font-family:'Noto Serif Bengali',serif; font-size:19px; font-weight:700;
+  display:flex; align-items:center; gap:10px; color:var(--ink);
+}
+.exam-page-head h2 i{color:var(--gold); font-size:17px;}
+.exam-page-head p{margin:0; font-size:13px; color:var(--ink-soft);}
+
+/* ---- Admin-only entry point — only visible to a verified admins/{uid}
+   account (js/exam.js checkExamAdminStatus). Styled distinctly (solid gold)
+   so it reads as a privileged action, not just another list item. ---- */
+.exam-admin-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;
+  margin-top:12px;padding:11px 16px;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-soft, var(--gold)) 100%);
+  color:var(--teal-deep, var(--teal));font-family:var(--font-ui,'Hind Siliguri'),sans-serif;
+  font-weight:700;font-size:13.5px;box-shadow:0 6px 16px -8px rgba(0,0,0,.35);
+}
+.exam-admin-btn i{font-size:14px;}
+.exam-admin-btn:active{opacity:.85;}
+
+#examListContainer .list-item{transition:background .15s ease;}
+#examListContainer .list-item:hover{background:var(--sage);}
+#examListContainer .list-item:active{background:var(--gold-soft, var(--sage));}
+
+/* ---- Modern exam card — deliberately its own component (not the generic
+   .list-item used elsewhere) so the এক্সাম section reads as a distinct,
+   more "smart" surface: icon tile, title/description, duration + question
+   count chips (set from the admin panel), and an arrow CTA. ---- */
+#examListContainer{display:flex; flex-direction:column; gap:10px;}
+.exam-card{
+  display:flex; align-items:flex-start; gap:13px; padding:14px;
+  background:var(--parchment); border:1px solid var(--line); border-radius:16px;
+  cursor:pointer; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+}
+.exam-card:hover, .exam-card:focus-visible{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px -12px rgba(0,0,0,.22);
+  border-color:var(--gold-soft, var(--gold));
+  outline:none;
+}
+.exam-card:active{transform:translateY(0); box-shadow:0 2px 8px -4px rgba(0,0,0,.2);}
+
+.exam-card-icon{
+  flex-shrink:0; width:44px; height:44px; border-radius:13px;
+  background:linear-gradient(135deg, var(--gold) 0%, var(--gold-soft, var(--gold)) 100%);
+  color:var(--teal-deep, var(--teal)); display:flex; align-items:center; justify-content:center;
+  font-size:16px; box-shadow:0 4px 12px -6px rgba(0,0,0,.3);
+}
+
+.exam-card-body{flex:1; min-width:0;}
+.exam-card-title{
+  font-family:'Noto Serif Bengali',serif; font-weight:700; font-size:15px; color:var(--ink);
+  word-break:break-word;
+}
+.exam-card-desc{
+  font-family:'Hind Siliguri',sans-serif; font-size:12.5px; color:var(--ink-soft);
+  margin-top:3px; line-height:1.55; word-break:break-word;
+}
+.exam-card-meta{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px;}
+.exam-chip{
+  display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600;
+  color:var(--ink-soft); background:var(--sage); border-radius:999px; padding:4px 10px;
+}
+.exam-chip i{color:var(--gold); font-size:10.5px;}
+
+.exam-card-cta{
+  flex-shrink:0; width:30px; height:30px; border-radius:50%; background:var(--sage);
+  color:var(--ink-soft); display:flex; align-items:center; justify-content:center;
+  font-size:12px; margin-top:2px; transition:background .18s ease, color .18s ease, transform .18s ease;
+}
+.exam-card:hover .exam-card-cta{
+  background:var(--gold); color:var(--teal-deep, #fff); transform:translateX(2px);
+}
+
+/* ---- Locked "প্রকাশের সময়" countdown card — shown instead of the normal
+   clickable card while exam.publishAt is still in the future (js/exam.js
+   buildLockedExamCard). Not clickable; ticks live every second and swaps
+   itself out for the normal card the moment the target time is reached. ---- */
+.exam-card-locked{
+  cursor:default; flex-direction:column; align-items:stretch;
+  background:linear-gradient(160deg, var(--parchment) 0%, var(--sage) 130%);
+  border-color:var(--gold-soft, var(--gold));
+}
+.exam-card-locked:hover{transform:none; box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.exam-card-locked .exam-card-icon-locked{
+  align-self:flex-start; margin-bottom:10px;
+  background:linear-gradient(135deg, var(--teal, #2a6f6a) 0%, var(--teal-deep, var(--teal, #2a6f6a)) 100%);
+  color:#fff; animation:examIconPulse 2.4s ease-in-out infinite;
+}
+@keyframes examIconPulse{
+  0%,100%{box-shadow:0 4px 12px -6px rgba(0,0,0,.3);}
+  50%{box-shadow:0 4px 18px -4px var(--gold, rgba(0,0,0,.3));}
+}
+.exam-locked-badge{
+  display:inline-flex; align-items:center; gap:6px; align-self:flex-start;
+  font-size:11px; font-weight:700; letter-spacing:.2px; color:var(--teal-deep, var(--teal));
+  background:var(--gold-soft, var(--gold)); border-radius:999px; padding:4px 11px; margin-bottom:7px;
+}
+.exam-locked-badge i{animation:examHourglassSpin 2.2s ease-in-out infinite;}
+@keyframes examHourglassSpin{
+  0%,60%,100%{transform:rotate(0deg);}
+  75%{transform:rotate(180deg);}
+}
+
+/* ---- Live D:H:M:S digits ---- */
+.exam-countdown{
+  display:flex; align-items:center; gap:7px; margin-top:12px; flex-wrap:nowrap;
+}
+.ecd-unit{
+  display:flex; flex-direction:column; align-items:center; gap:2px; min-width:44px;
+  background:var(--panel, #fff); border:1px solid var(--line); border-radius:11px;
+  padding:7px 4px 6px; box-shadow:0 2px 6px -3px rgba(0,0,0,.15);
+}
+.ecd-val{
+  font-family:'Noto Serif Bengali',serif; font-variant-numeric:tabular-nums;
+  font-weight:700; font-size:17px; color:var(--teal-deep, var(--teal)); line-height:1;
+}
+.ecd-label{font-size:9.5px; color:var(--ink-soft); margin-top:3px; white-space:nowrap;}
+.ecd-sep{font-weight:700; color:var(--gold); font-size:16px; margin-top:-14px;}
+
+.exam-publish-line{
+  display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft);
+  margin-top:11px;
+}
+.exam-publish-line i{color:var(--gold);}
+
+/* ---- Reveal animation — plays once, right when a locked card is swapped
+   for its unlocked version (tickExamCountdowns), so "আনলক" moment reads as
+   a deliberate, smart transition instead of an abrupt content swap. ---- */
+.exam-card-reveal{
+  animation:examCardReveal .9s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes examCardReveal{
+  0%{transform:scale(.96); box-shadow:0 0 0 0 var(--gold, rgba(255,193,7,.6)); }
+  35%{box-shadow:0 0 0 8px rgba(212,175,55,.18);}
+  100%{transform:scale(1); box-shadow:0 1px 3px rgba(0,0,0,.04);}
+}
+
+/* ---- Exam consent modal — shown before leaving to the TechVerse platform.
+   Uses the shared .app-modal / .app-modal-box shell, with its own body
+   content styled here. ---- */
+.exam-consent-box{max-width:440px;}
+.exam-consent-text{
+  font-family:'Hind Siliguri',sans-serif; font-size:13.5px; line-height:1.85; color:var(--ink);
+  margin:0 0 12px;
+}
+.exam-consent-text:last-of-type{margin-bottom:16px;}
+.exam-consent-text a{
+  color:var(--gold); font-weight:700; text-decoration:underline; text-underline-offset:2px;
+}
+.exam-consent-links-line{margin-top:14px;}
+.exam-consent-steps{
+  list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:9px;
+}
+.exam-consent-steps li{
+  display:flex; align-items:flex-start; gap:10px; font-family:'Hind Siliguri',sans-serif;
+  font-size:13px; line-height:1.6; color:var(--ink);
+}
+.exam-consent-steps li i{
+  flex-shrink:0; width:26px; height:26px; border-radius:9px; background:var(--sage);
+  color:var(--gold); display:flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;
+}
+.exam-consent-agree{
+  display:flex; align-items:flex-start; gap:10px; cursor:pointer; padding:12px 13px;
+  background:var(--sage); border-radius:12px; margin-bottom:16px;
+}
+.exam-consent-agree input[type="checkbox"]{
+  width:18px; height:18px; flex-shrink:0; margin-top:1px; accent-color:var(--gold); cursor:pointer;
+}
+.exam-consent-agree span{
+  font-family:'Hind Siliguri',sans-serif; font-size:13px; font-weight:600; color:var(--ink); line-height:1.5;
+}
+.exam-consent-actions{display:flex; gap:10px;}
+.exam-consent-btn{
+  flex:1; border:none; border-radius:12px; padding:12px 14px; font-family:'Hind Siliguri',sans-serif;
+  font-weight:700; font-size:13.5px; cursor:pointer; display:inline-flex; align-items:center;
+  justify-content:center; gap:8px; transition:filter .15s ease, opacity .15s ease, transform .15s ease;
+}
+.exam-consent-btn:active{transform:scale(.97);}
+.exam-consent-cancel{background:var(--panel); color:var(--ink-soft); border:1px solid var(--line);}
+.exam-consent-cancel:hover{background:var(--sage);}
+.exam-consent-proceed{
+  background:linear-gradient(135deg, var(--gold) 0%, var(--gold-soft, var(--gold)) 100%);
+  color:var(--teal-deep, #fff); box-shadow:0 6px 16px -8px rgba(0,0,0,.35);
+}
+.exam-consent-proceed:hover:not(:disabled){filter:brightness(1.06);}
+.exam-consent-proceed:disabled{opacity:.5; cursor:not-allowed; box-shadow:none;}

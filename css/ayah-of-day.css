@@ -1,0 +1,226 @@
+/* ==== ayah-of-day.css — Daily Ayah card (all 7 themes) ==== */
+
+/* ---------- Card shell ---------- */
+.aod-card{
+  background:linear-gradient(150deg,var(--teal) 0%,var(--teal-deep) 100%);
+  border-radius:16px;
+  padding:0;
+  margin:2px 2px 16px;
+  cursor:default;
+  box-shadow:0 4px 16px rgba(0,0,0,.18);
+  position:relative;
+  overflow:hidden;
+  user-select:none;
+}
+
+/* ---------- Header row ---------- */
+.aod-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:13px 15px 11px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.aod-title-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.aod-title-icon{
+  width:30px;height:30px;
+  border-radius:8px;
+  background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+  color:rgba(255,255,255,.90);
+  flex-shrink:0;
+}
+.aod-title-text{
+  font-family:'Hind Siliguri',sans-serif;
+  font-size:13px;font-weight:700;
+  letter-spacing:.4px;
+  color:rgba(255,255,255,.80);
+  text-transform:uppercase;
+}
+.aod-badge-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--gold);
+  flex-shrink:0;
+  opacity:.9;
+}
+
+/* ---------- Action buttons (header right) ---------- */
+.aod-actions{
+  display:flex;align-items:center;gap:6px;
+}
+.aod-btn{
+  width:34px;height:34px;
+  border:none;background:rgba(255,255,255,.10);
+  border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  color:rgba(255,255,255,.80);
+  font-size:14px;
+  transition:background .15s,color .15s,transform .1s;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+  flex-shrink:0;
+}
+.aod-btn:active{transform:scale(.90);background:rgba(255,255,255,.20);}
+.aod-btn.aod-play-btn{
+  background:rgba(255,255,255,.18);
+  color:rgba(255,255,255,.95);
+  font-size:16px;
+}
+.aod-btn.aod-play-btn.aod-playing{
+  background:var(--gold);
+  color:#1a1a1a;
+}
+
+/* ---------- Body ---------- */
+.aod-body{
+  padding:14px 16px 12px;
+}
+.aod-arabic{
+  font-family:'Amiri',serif;
+  font-size:22px;line-height:1.9;
+  text-align:right;direction:rtl;
+  color:rgba(255,255,255,.97);
+  margin-bottom:10px;
+  word-break:break-word;
+}
+.aod-bengali{
+  font-family:'Noto Serif Bengali',serif;
+  font-size:13.5px;line-height:1.75;
+  color:rgba(255,255,255,.80);
+  margin-bottom:0;
+}
+
+/* ---------- Footer row ---------- */
+.aod-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 16px 13px;
+  border-top:1px solid rgba(255,255,255,.10);
+  gap:8px;
+}
+.aod-ref{
+  font-family:'Hind Siliguri',sans-serif;
+  font-size:11.5px;font-weight:600;
+  color:var(--gold);
+  letter-spacing:.1px;
+  flex-shrink:0;
+}
+.aod-qari{
+  font-family:'Hind Siliguri',sans-serif;
+  font-size:11.5px;
+  color:rgba(255,255,255,.65);
+  display:flex;align-items:center;gap:5px;
+  text-align:right;
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.aod-qari i{font-size:11px;color:rgba(255,255,255,.50);flex-shrink:0;}
+
+/* ---------- Loading / error state ---------- */
+.aod-loading{
+  padding:20px 16px;
+  font-family:'Hind Siliguri',sans-serif;
+  font-size:13px;
+  color:rgba(255,255,255,.65);
+  text-align:center;
+}
+
+/* =========================================================
+   THEME OVERRIDES — gradient + gold tones per theme
+   ========================================================= */
+
+/* Desert */
+body[data-theme="desert"] .aod-card{
+  background:linear-gradient(150deg,#B5581F 0%,#7A3B12 100%);
+}
+body[data-theme="desert"] .aod-ref{color:#F5D080;}
+
+/* Ocean */
+body[data-theme="ocean"] .aod-card{
+  background:linear-gradient(150deg,#116E8C 0%,#0A4A61 100%);
+}
+body[data-theme="ocean"] .aod-ref{color:#F4CC76;}
+
+/* Rose */
+body[data-theme="rose"] .aod-card{
+  background:linear-gradient(150deg,#B5476B 0%,#7E2F4B 100%);
+}
+body[data-theme="rose"] .aod-ref{color:#F9D99E;}
+
+/* AMOLED */
+body[data-theme="amoled"] .aod-card{
+  background:linear-gradient(150deg,#1C1C1C 0%,#000000 100%);
+  box-shadow:0 4px 20px rgba(0,0,0,.55);
+  border:1px solid rgba(230,185,77,.15);
+}
+body[data-theme="amoled"] .aod-header,
+body[data-theme="amoled"] .aod-footer{
+  border-color:rgba(255,255,255,.07);
+}
+body[data-theme="amoled"] .aod-ref{color:#E6B94D;}
+
+/* Royal */
+body[data-theme="royal"] .aod-card{
+  background:linear-gradient(150deg,#3D2470 0%,#120B21 100%);
+}
+body[data-theme="royal"] .aod-ref{color:#E3B854;}
+
+/* Night */
+body[data-theme="night"] .aod-ref{color:#D9B45E;}
+
+/* Emerald (default) */
+body[data-theme="emerald"] .aod-ref,
+:root .aod-ref{color:#E5C86A;}
+
+
+/* =========================================================
+   STREAK RING — unchanged
+   ========================================================= */
+.streak-ring-card{
+  display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--gold-soft);
+  border-radius:var(--radius);padding:14px 16px;margin:2px 2px 16px;cursor:pointer;
+  transition:transform .15s ease,background .2s,box-shadow .2s;
+}
+.streak-ring-card:active{transform:scale(.98);}
+.streak-ring-card.active{box-shadow:0 4px 14px rgba(192,151,58,.18);}
+.streak-ring-wrap{position:relative;width:72px;height:72px;flex-shrink:0;}
+.streak-ring-svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.srs-track{stroke:var(--gold-soft);opacity:.45;}
+.srs-fill{transition:stroke-dashoffset .5s ease;}
+.streak-ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.streak-ring-center i{font-size:13px;color:var(--gold);margin-bottom:1px;}
+.streak-ring-center .srn-num{font-family:'Hind Siliguri',sans-serif;font-weight:800;font-size:19px;line-height:1;color:var(--ink);}
+.streak-ring-center .srn-label{font-family:'Hind Siliguri',sans-serif;font-size:10px;color:var(--ink-soft);margin-top:1px;}
+.streak-ring-text{flex:1;min-width:0;}
+.streak-ring-title{font-family:'Noto Serif Bengali',serif;font-weight:700;font-size:14px;color:var(--ink);}
+.streak-ring-sub{font-family:'Hind Siliguri',sans-serif;font-size:11.5px;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
+.streak-ring-progress{width:100%;height:5px;border-radius:999px;background:var(--gold-soft);overflow:hidden;margin-top:9px;}
+.srp-fill{height:100%;border-radius:999px;background:var(--gold);transition:width .5s ease;}
+
+/* =========================================================
+   HIFZ REVIEW CARD — unchanged
+   ========================================================= */
+.hifz-review-card{
+  display:flex;align-items:flex-start;gap:14px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;margin:2px 2px 16px;
+}
+.hifz-review-ic{
+  width:42px;height:42px;border-radius:12px;background:var(--gold-soft);color:var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;
+}
+.hifz-review-mid{flex:1;min-width:0;}
+.hifz-review-title{font-family:'Noto Serif Bengali',serif;font-weight:700;font-size:14px;color:var(--ink);}
+.hifz-review-sub{font-family:'Hind Siliguri',sans-serif;font-size:11.5px;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
+.hifz-review-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.hifz-due-chip{padding:6px 12px;font-size:12px;}

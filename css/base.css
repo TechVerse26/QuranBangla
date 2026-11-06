@@ -1,0 +1,138 @@
+/* ==== base.css — root theme variables (7 themes) + global resets ==== */
+
+/* =========================================================
+   THEME SYSTEM — every visual surface in this file is keyed
+   off these custom properties, so switching body[data-theme]
+   re-skins the entire app: colors, corner radius (--radius)
+   and a per-theme background glow (--bg-texture). Themes that
+   sit on a dark base also get the .theme-dark-accent class
+   (set in js/app.js) so a few accent colors flip to gold for
+   contrast, same as the old dark mode did.
+   ========================================================= */
+:root{
+  --radius:14px;
+  --player-h:72px;
+  --bg-texture:none;
+}
+/* ---- থিম ১: পান্না (Emerald) — default, warm parchment/teal/gold ---- */
+body[data-theme="emerald"], :root{
+  --parchment:#FBF6EC;
+  --panel:#F3ECDC;
+  --ink:#1E2A26;
+  --ink-soft:#4B5A54;
+  --teal:#0E3B36;
+  --teal-deep:#092723;
+  --gold:#C0973A;
+  --gold-soft:#E8D6A8;
+  --sage:#DCE6DE;
+  --line:#D8CDB0;
+  --radius:14px;
+  --bg-texture:none;
+}
+/* ---- থিম ২: রাত্রি (Night) — the original dark mode ---- */
+body[data-theme="night"]{
+  --parchment:#0F1F1B;
+  --panel:#152B25;
+  --ink:#EDE6D3;
+  --ink-soft:#B9C4BC;
+  --teal:#123A34;
+  --teal-deep:#0A211D;
+  --gold:#D9B45E;
+  --gold-soft:#3A3220;
+  --sage:#1B342C;
+  --line:#2B4238;
+  --radius:14px;
+  --bg-texture:none;
+}
+/* ---- থিম ৩: রাজকীয় (Royal) — deep purple + gold, extra plush corners ---- */
+body[data-theme="royal"]{
+  --parchment:#170F26;
+  --panel:#241A3D;
+  --ink:#F1E7FF;
+  --ink-soft:#B8A8D9;
+  --teal:#3D2470;
+  --teal-deep:#120B21;
+  --gold:#E3B854;
+  --gold-soft:#4A3568;
+  --sage:#2E2049;
+  --line:#3A2A54;
+  --radius:20px;
+  --bg-texture:radial-gradient(circle at 12% -8%, rgba(227,184,84,.14), transparent 55%), radial-gradient(circle at 108% 112%, rgba(122,74,199,.30), transparent 50%);
+}
+/* ---- থিম ৪: মরুভূমি (Desert) — warm terracotta/sand, crisp geometric corners ---- */
+body[data-theme="desert"]{
+  --parchment:#FBF1E4;
+  --panel:#F3E3CB;
+  --ink:#3B2A1E;
+  --ink-soft:#7A6650;
+  --teal:#B5581F;
+  --teal-deep:#7A3B12;
+  --gold:#C9932F;
+  --gold-soft:#EAD2A0;
+  --sage:#E8D9BE;
+  --line:#DEC9A0;
+  --radius:8px;
+  --bg-texture:radial-gradient(circle at 100% 0%, rgba(181,88,31,.10), transparent 45%);
+}
+/* ---- থিম ৫: সাগর (Ocean) — calm blue/teal, soft glassy corners ---- */
+body[data-theme="ocean"]{
+  --parchment:#EEF6F8;
+  --panel:#DCEEF3;
+  --ink:#123047;
+  --ink-soft:#4C6B7F;
+  --teal:#116E8C;
+  --teal-deep:#0A4A61;
+  --gold:#E0A94B;
+  --gold-soft:#CDE6EE;
+  --sage:#C8E4EA;
+  --line:#BEDCE4;
+  --radius:22px;
+  --bg-texture:radial-gradient(circle at 15% 0%, rgba(17,110,140,.14), transparent 50%), radial-gradient(circle at 100% 100%, rgba(224,169,75,.10), transparent 45%);
+}
+/* ---- থিম ৬: মিডনাইট (AMOLED) — true black, neon gold accents ---- */
+body[data-theme="amoled"]{
+  --parchment:#000000;
+  --panel:#0D0D0D;
+  --ink:#EDEDED;
+  --ink-soft:#9A9A9A;
+  --teal:#101010;
+  --teal-deep:#000000;
+  --gold:#E6B94D;
+  --gold-soft:#241D0C;
+  --sage:#151515;
+  --line:#262626;
+  --radius:10px;
+  --bg-texture:radial-gradient(circle at 50% -10%, rgba(230,185,77,.08), transparent 45%);
+}
+/* ---- থিম ৭: গোলাপবাগ (Rose) — soft blush pink, dreamy rounded corners ---- */
+body[data-theme="rose"]{
+  --parchment:#FDF3F5;
+  --panel:#FBE6EA;
+  --ink:#3A2530;
+  --ink-soft:#8A6572;
+  --teal:#B5476B;
+  --teal-deep:#7E2F4B;
+  --gold:#CDA15A;
+  --gold-soft:#F4D9DE;
+  --sage:#F6DCE1;
+  --line:#EFC9D2;
+  --radius:18px;
+  --bg-texture:radial-gradient(circle at 100% 0%, rgba(181,71,107,.10), transparent 50%);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;overflow-x:hidden;width:100%;}
+body{
+  background-color:var(--parchment);
+  background-image:var(--bg-texture);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-family:var(--font-ui,'Hind Siliguri'),sans-serif;
+  min-height:100vh;
+  transition:background-color .35s ease,color .35s ease,background-image .35s ease;
+}
+::selection{background:var(--gold-soft);}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important;}
+}
+img,svg,input,select,button{max-width:100%;}

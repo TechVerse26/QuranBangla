@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- accent colour of the notification small icon (matches the app's brand teal) -->
+    <color name="qr_notification_color">#0F5C4D</color>
+</resources>

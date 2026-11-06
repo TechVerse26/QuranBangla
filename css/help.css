@@ -1,0 +1,21 @@
+/* ==== help.css — help & support screen (FAQ, contact) ==== */
+
+/* ---- Help & support ---- */
+.help-section{margin-bottom:18px;}
+.help-section-title{font-size:12.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.help-faq{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px;}
+.help-faq-q{
+  padding:12px 14px;background:var(--panel);cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.help-faq-a{padding:0 14px;max-height:0;overflow:hidden;font-size:13px;color:var(--ink-soft);line-height:1.6;transition:max-height .2s ease,padding .2s ease;}
+.help-faq.open .help-faq-a{padding:12px 14px;max-height:300px;}
+.help-faq.open .help-faq-q i{transform:rotate(180deg);}
+.help-contact-row{display:flex;gap:10px;flex-wrap:wrap;}
+.help-contact-btn{
+  display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:10px 14px;text-decoration:none;color:var(--ink);font-size:13px;flex:1;min-width:140px;
+}
+.help-contact-btn i{color:var(--gold);font-size:15px;}
+.help-contact-btn:hover{background:var(--sage);}
+

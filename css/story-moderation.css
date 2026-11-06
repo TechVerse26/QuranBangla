@@ -1,0 +1,140 @@
+/* ============================================================================
+   css/story-moderation.css — Story মডারেশনের ইউজার-মুখী UI (প্রগ্রেস, ফলাফল শীট, কম্পোজার ব্যানার)
+   সাইটের থিম-টোকেন (--parchment, --panel, --ink, --gold, --sage, --line) ব্যবহার করে, তাই চারটি
+   থিমেই মানানসই। অ্যানিমেশন ন্যূনতম: শুধু শীট স্লাইড/ফেড, একটা ছোট স্পিনার; কোনো গ্লো নেই।
+   ============================================================================ */
+
+:root{
+  --smod-ok:#3E9B73;
+  --smod-wait:#C0973A;
+  --smod-bad:#C4584B;
+}
+
+/* ---------- progress pill: "আপনার স্টোরি যাচাই করা হচ্ছে..." → "AI মডারেশন চলছে..." ---------- */
+.smod-progress{
+  position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:89;
+  display:flex;align-items:center;gap:10px;max-width:min(92vw,420px);
+  padding:10px 16px;border-radius:999px;
+  background:rgba(18,28,25,.94);color:#fff;
+  font:500 14px/1.3 'Hind Siliguri',sans-serif;
+  opacity:0;pointer-events:none;transform:translate(-50%,8px);
+  transition:opacity .18s ease,transform .18s ease;
+  box-shadow:0 6px 20px rgba(0,0,0,.3);
+}
+.smod-progress.show{opacity:1;transform:translate(-50%,0);}
+.smod-spin{
+  flex:0 0 auto;width:16px;height:16px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.28);border-top-color:#fff;
+  animation:smodSpin .8s linear infinite;
+}
+@keyframes smodSpin{to{transform:rotate(360deg);}}
+
+/* ---------- result sheet ---------- */
+.smod-scrim{
+  position:fixed;inset:0;z-index:90;background:rgba(10,20,17,.55);
+  opacity:0;transition:opacity .2s ease;
+}
+.smod-scrim.open{opacity:1;}
+
+.smod-sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:91;
+  background:var(--parchment);color:var(--ink);
+  border-radius:20px 20px 0 0;max-height:88vh;overflow-y:auto;overscroll-behavior:contain;
+  padding:6px 18px calc(18px + env(safe-area-inset-bottom,0px));
+  font-family:'Hind Siliguri',sans-serif;
+  transform:translateY(100%);transition:transform .22s ease;
+  box-shadow:0 -8px 30px rgba(0,0,0,.2);
+}
+.smod-sheet.open{transform:translateY(0);}
+.smod-handle{width:38px;height:4px;border-radius:3px;background:var(--line);margin:8px auto 14px;}
+
+.smod-sheet.smod-ok{--smod-accent:var(--smod-ok);}
+.smod-sheet.smod-wait{--smod-accent:var(--smod-wait);}
+.smod-sheet.smod-bad{--smod-accent:var(--smod-bad);}
+
+.smod-head{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;}
+.smod-ic{
+  flex:0 0 auto;width:46px;height:46px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  color:var(--smod-accent);
+  background:color-mix(in srgb,var(--smod-accent) 15%,transparent);
+}
+.smod-head-text{min-width:0;flex:1;}
+.smod-title{
+  margin:2px 0 6px;font:700 17px/1.45 'Noto Serif Bengali',serif;color:var(--ink);
+  overflow-wrap:anywhere;
+}
+.smod-msg{margin:0;font-size:14px;line-height:1.8;color:var(--ink-soft);overflow-wrap:anywhere;}
+
+.smod-guideline{
+  margin:0 0 14px;padding:10px 12px;border-radius:10px;
+  background:var(--panel);border-left:3px solid var(--smod-accent);
+}
+.smod-guideline-label{font-size:11.5px;color:var(--ink-soft);margin-bottom:2px;}
+.smod-guideline-title{font-size:14.5px;font-weight:600;color:var(--ink);}
+
+.smod-note{
+  display:flex;gap:9px;align-items:flex-start;margin:0 0 14px;padding:10px 12px;border-radius:10px;
+  background:var(--sage);color:var(--ink);font-size:13px;line-height:1.6;
+}
+.smod-note i{margin-top:3px;color:var(--ink-soft);}
+
+.smod-items{list-style:none;margin:0 0 14px;padding:0;}
+.smod-item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);}
+.smod-item:first-child{border-top:none;}
+.smod-item-main{min-width:0;flex:1;}
+.smod-item-title{font-size:14px;color:var(--ink);overflow-wrap:anywhere;}
+.smod-item-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;overflow-wrap:anywhere;}
+
+.smod-chip{
+  flex:0 0 auto;white-space:nowrap;font-size:11.5px;line-height:1;padding:5px 9px;border-radius:999px;
+  color:var(--ink);border:1px solid var(--line);border-left-width:3px;
+}
+.smod-chip-ok{background:color-mix(in srgb,var(--smod-ok) 14%,transparent);border-left-color:var(--smod-ok);}
+.smod-chip-wait{background:color-mix(in srgb,var(--smod-wait) 16%,transparent);border-left-color:var(--smod-wait);}
+.smod-chip-bad{background:color-mix(in srgb,var(--smod-bad) 14%,transparent);border-left-color:var(--smod-bad);}
+
+.smod-actions{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.smod-btn{
+  min-height:46px;padding:0 16px;border-radius:12px;border:1px solid transparent;cursor:pointer;
+  font:600 15px/1.2 'Hind Siliguri',sans-serif;
+}
+.smod-btn-primary{background:var(--gold);color:#1E2A26;}
+.smod-btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+.smod-btn:focus-visible,.smod-link:focus-visible,.smod-banner-x:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.smod-link{
+  display:block;margin:8px auto 0;min-height:40px;padding:0 10px;background:none;border:none;cursor:pointer;
+  font:500 13px/1.2 'Hind Siliguri',sans-serif;color:var(--ink-soft);text-decoration:underline;
+}
+
+/* desktop / large tablets: a centred card instead of a bottom sheet */
+@media (min-width:600px){
+  .smod-sheet{
+    left:50%;right:auto;bottom:auto;top:50%;width:min(480px,92vw);border-radius:20px;padding-top:22px;
+    transform:translate(-50%,-46%);opacity:0;transition:transform .2s ease,opacity .2s ease;
+  }
+  .smod-sheet.open{transform:translate(-50%,-50%);opacity:1;}
+  .smod-handle{display:none;}
+  .smod-actions{flex-direction:row-reverse;}
+  .smod-actions .smod-btn{flex:1;}
+}
+
+/* ---------- note inside the composer for a slide that was not approved ---------- */
+.smod-banner{
+  position:absolute;top:8px;left:12px;right:12px;z-index:4;
+  display:flex;gap:10px;align-items:flex-start;padding:9px 6px 9px 12px;border-radius:10px;
+  background:rgba(34,22,20,.9);color:#fff;border-left:3px solid #E0735F;
+  font:400 13px/1.55 'Hind Siliguri',sans-serif;
+}
+.smod-banner > i{margin-top:3px;color:#F0A294;}
+.smod-banner-text{flex:1;min-width:0;display:flex;flex-direction:column;}
+.smod-banner-text strong{font-weight:600;}
+.smod-banner-text span{color:rgba(255,255,255,.82);overflow-wrap:anywhere;}
+.smod-banner-x{
+  flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:none;background:transparent;color:#fff;cursor:pointer;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .smod-sheet,.smod-scrim,.smod-progress{transition:none;}
+  .smod-spin{animation-duration:2.6s;}
+}

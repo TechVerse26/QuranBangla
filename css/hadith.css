@@ -1,0 +1,61 @@
+/* ==== hadith.css — Hadith books / chapters / hadith list ==== */
+
+#hadithBooksContainer{padding:2px 0 10px;}
+.hadith-book-card{
+  display:flex;align-items:center;gap:14px;padding:14px 10px;cursor:pointer;
+  border-bottom:1px solid var(--line);transition:background .15s ease;
+  border-radius:14px;margin-bottom:4px;
+}
+.hadith-book-card:hover{background:var(--sage);}
+.hadith-book-card:active{background:var(--gold-soft);}
+.hb-icon{
+  width:48px;height:48px;flex-shrink:0;border-radius:14px;background:var(--panel);
+  display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:19px;
+}
+body.theme-dark-accent .hb-icon{color:var(--gold);}
+.hb-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.hb-title{font-family:'Noto Serif Bengali',serif;font-weight:700;font-size:16px;}
+.hb-sub{font-family:'Hind Siliguri',sans-serif;font-size:12px;color:var(--ink-soft);opacity:.85;}
+.hb-count{font-family:'Hind Siliguri',sans-serif;font-size:11.5px;color:var(--ink-soft);opacity:.7;margin-top:1px;}
+
+.hadith-book-head{margin:4px 4px 12px;}
+.hadith-book-head-title{font-family:'Noto Serif Bengali',serif;font-size:17px;font-weight:700;margin:0 0 2px;}
+
+.hadith-jump-btn{
+  display:flex;align-items:center;gap:8px;width:100%;margin:0 0 12px;padding:10px 14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;color:var(--ink);
+  font-family:'Hind Siliguri',sans-serif;font-size:13.5px;cursor:pointer;
+}
+.hadith-jump-btn:active{background:var(--gold-soft);}
+
+.hadith-chapter-item .li-sub.hadith-chapter-title-en{font-family:'Hind Siliguri',sans-serif;opacity:.8;}
+.hadith-chapter-range{font-family:'Hind Siliguri',sans-serif;font-size:11.5px;color:var(--ink-soft);opacity:.65;margin-top:1px;}
+
+.hadith-chapter-head{margin:4px 4px 14px;}
+
+.hadith-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:14px 16px;margin-bottom:12px;scroll-margin-top:80px;
+}
+.hadith-card-highlight{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft);}
+.hadith-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.hadith-num-badge{
+  font-family:'Hind Siliguri',sans-serif;font-size:12px;font-weight:600;color:var(--ink-soft);
+  background:var(--sage);border-radius:8px;padding:3px 9px;
+}
+.hadith-grade-badge{font-family:'Hind Siliguri',sans-serif;font-size:11px;font-weight:600;border-radius:8px;padding:3px 9px;}
+.hg-sahih{background:#DDF0E2;color:#1F6B3E;}
+.hg-hasan{background:#FDF0D8;color:#8A5A0F;}
+.hg-daif{background:#FBE1E1;color:#9A2E2E;}
+.hg-other{background:var(--sage);color:var(--ink-soft);}
+body.theme-dark-accent .hg-sahih{background:#123A28;color:#7FDDA0;}
+body.theme-dark-accent .hg-hasan{background:#3A2E10;color:#E3B854;}
+body.theme-dark-accent .hg-daif{background:#3A1616;color:#E88;}
+body.theme-dark-accent .hg-other{background:var(--sage);color:var(--ink-soft);}
+
+.hadith-text{font-family:'Noto Serif Bengali',serif;font-size:15px;line-height:1.85;color:var(--ink);}
+.hadith-ref{font-family:'Hind Siliguri',sans-serif;font-size:11.5px;color:var(--ink-soft);opacity:.7;margin-top:10px;}
+
+.hadith-error{
+  padding:24px 12px;text-align:center;font-family:'Hind Siliguri',sans-serif;font-size:13.5px;color:var(--ink-soft);
+}

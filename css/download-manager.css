@@ -1,0 +1,122 @@
+/* ==== download-manager.css — Offline Download Manager modal (js/download-manager.js) ====
+   Redesign: the modal is reframed as a small "সংরক্ষণাগার" (archive) — a hero
+   gauge card showing how much of the Qur'an is preserved offline, filter
+   chips, a refined toolbar, and calmer card-style rows with a smooth
+   animated progress ring while downloading. */
+
+.dlm-modal-box{ max-width:480px; }
+
+/* ---------- Hero / gauge card ---------- */
+@property --p{ syntax:'<number>'; inherits:true; initial-value:0; }
+
+.dlm-hero{
+  position:relative; overflow:hidden; display:flex; align-items:center; gap:16px;
+  background:linear-gradient(150deg, var(--teal) 0%, var(--teal-deep) 100%);
+  border-radius:calc(var(--radius) + 4px); padding:16px 16px 16px 14px; margin-bottom:14px;
+  box-shadow:0 6px 18px rgba(0,0,0,.14);
+}
+.dlm-hero::before{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(circle at 108% -10%, rgba(224,184,84,.28), transparent 55%);
+}
+.dlm-gauge{ position:relative; flex-shrink:0; width:72px; height:72px; }
+.dlm-gauge svg{ width:72px; height:72px; transform:rotate(-90deg); }
+.dlm-gauge-track{ fill:none; stroke:rgba(255,255,255,.14); stroke-width:7; }
+.dlm-gauge-fill{
+  fill:none; stroke:var(--gold); stroke-width:7; stroke-linecap:round;
+  transition:stroke-dasharray .5s cubic-bezier(.4,0,.2,1);
+}
+.dlm-gauge-label{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  flex-direction:column; color:var(--sage); font-family:'Hind Siliguri',sans-serif;
+}
+.dlm-gauge-label b{ font-size:15px; line-height:1; color:#fff; }
+.dlm-gauge-label span{ font-size:8.5px; opacity:.75; margin-top:2px; }
+
+.dlm-hero-body{ flex:1; min-width:0; position:relative; z-index:1; }
+.dlm-hero-title{ font-family:'Noto Serif Bengali',serif; font-size:15px; color:#fff; font-weight:600; }
+.dlm-hero-sub{ font-size:11.5px; color:var(--sage); opacity:.85; margin-top:3px; }
+.dlm-hero-bar{ margin-top:9px; display:flex; align-items:center; gap:8px; }
+.dlm-hero-bar-track{ flex:1; height:5px; border-radius:999px; background:rgba(255,255,255,.16); overflow:hidden; }
+.dlm-hero-bar-fill{ height:100%; border-radius:999px; background:var(--gold); transition:width .5s cubic-bezier(.4,0,.2,1); }
+.dlm-hero-bar-text{ font-size:10px; color:var(--sage); opacity:.8; flex-shrink:0; }
+.dlm-clear-btn{
+  position:relative; z-index:1; flex-shrink:0; align-self:flex-start; background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18); color:var(--sage); border-radius:999px; padding:7px 12px;
+  font-size:11.5px; font-family:'Hind Siliguri',sans-serif; cursor:pointer; display:flex; align-items:center; gap:5px;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.dlm-clear-btn:not(:disabled):active{ transform:scale(.96); }
+.dlm-clear-btn:not(:disabled):hover{ background:#c0392b; border-color:#c0392b; color:#fff; }
+.dlm-clear-btn:disabled{ opacity:.35; cursor:default; }
+
+/* ---------- Filter chips ---------- */
+.dlm-filter-row{ display:flex; gap:7px; margin-bottom:12px; overflow-x:auto; scrollbar-width:none; }
+.dlm-filter-row::-webkit-scrollbar{ display:none; }
+.dlm-chip{
+  flex-shrink:0; border:1px solid var(--line); background:var(--panel); color:var(--ink-soft);
+  border-radius:999px; padding:6px 13px; font-size:12px; font-family:'Hind Siliguri',sans-serif;
+  cursor:pointer; display:flex; align-items:center; gap:5px; transition:background .15s,color .15s,border-color .15s;
+}
+.dlm-chip .dlm-chip-count{ font-size:10px; opacity:.75; }
+.dlm-chip.active{ background:var(--teal); border-color:var(--teal); color:var(--sage); font-weight:600; }
+.dlm-chip:active{ transform:scale(.96); }
+
+/* ---------- Toolbar (search + reciter) ---------- */
+.dlm-controls{ display:flex; gap:8px; margin-bottom:12px; }
+.dlm-search{
+  flex:1; display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line);
+  border-radius:999px; padding:8px 14px; color:var(--ink-soft); transition:border-color .15s;
+}
+.dlm-search:focus-within{ border-color:var(--gold); }
+.dlm-search input{ border:none; background:none; outline:none; font-family:'Hind Siliguri',sans-serif; font-size:13px; color:var(--ink); flex:1; min-width:0; }
+.dlm-reciter-select{
+  background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:999px;
+  padding:8px 12px; font-family:'Hind Siliguri',sans-serif; font-size:12.5px; max-width:150px;
+}
+
+/* ---------- List ---------- */
+.dlm-list{ display:flex; flex-direction:column; gap:7px; }
+.dlm-row{
+  display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line);
+  border-radius:14px; padding:9px 11px 9px 9px; transition:border-color .2s,background .2s;
+  animation:dlmRowIn .25s ease both;
+}
+@keyframes dlmRowIn{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:none; } }
+.dlm-row.is-saved{ border-color:var(--gold-soft); background:linear-gradient(0deg, var(--gold-soft) 0%, var(--panel) 130%); }
+.dlm-row .badge-num{
+  flex-shrink:0; width:30px; height:30px; border-radius:50%; background:var(--sage); color:var(--ink);
+  display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700;
+  border:1.5px solid transparent; transition:border-color .2s,background .2s,color .2s;
+}
+.dlm-row.is-saved .badge-num{ background:var(--gold); color:var(--teal-deep); border-color:var(--gold); }
+.dlm-row-text{ flex:1; min-width:0; }
+.dlm-row-title{ font-size:13.5px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dlm-row-sub{ font-size:11px; color:var(--ink-soft); margin-top:1px; display:flex; align-items:center; gap:5px; }
+.dlm-row-sub .dlm-saved-tag{ color:var(--gold); font-weight:600; display:inline-flex; align-items:center; gap:3px; }
+.dlm-row-action{ flex-shrink:0; }
+
+.dlm-btn{
+  border:none; background:var(--teal); color:var(--sage); width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; flex-shrink:0;
+  transition:transform .12s ease, background .15s, color .15s;
+}
+.dlm-btn:active{ transform:scale(.9); }
+.dlm-btn.saved{ background:var(--gold-soft); color:var(--gold); }
+.dlm-btn.saved:hover{ background:#c0392b; color:#fff; }
+.dlm-btn.deleting{ opacity:.5; pointer-events:none; }
+
+.dlm-progress-ring{
+  --p:0; flex-shrink:0; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:9.5px; font-weight:700; color:var(--ink);
+  background:conic-gradient(var(--gold) calc(var(--p)*1%), var(--sage) 0);
+  transition:--p .25s linear;
+}
+.dlm-progress-ring::before{
+  content:''; position:absolute;
+}
+.dlm-empty-hint{
+  text-align:center; padding:26px 12px; color:var(--ink-soft); font-size:12.5px;
+  border:1.5px dashed var(--line); border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+.dlm-empty-hint i{ font-size:20px; color:var(--gold); opacity:.8; }

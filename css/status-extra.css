@@ -1,0 +1,251 @@
+/* ==== status-extra.css — voice status, background music, Highlights ====
+   Companion to status.css (same relationship as stats.css/stats-extra.css):
+   this only covers what those three additions need —
+     1) a full-screen voice-status slide (record → waveform-on-colour)
+     2) a short looping/playing background-music clip riding a text/photo
+        slide, plus the record/pick-and-trim bottom sheet both features
+        share
+     3) the permanent personal "Highlights" row under the status row
+   Same flat, solid-colour rule as status.css: no glow/blur/drop-shadow
+   anywhere, everything keyed off the app's existing theme variables so it
+   re-skins with all 7 themes. */
+
+/* ---------- Waveform bars (shared: composer, sheet, viewer) ---------- */
+.status-voice-bars{
+  display:flex;align-items:flex-end;gap:2px;height:44px;flex:1;min-width:0;
+}
+.status-voice-bar{
+  flex:1;min-width:2px;max-width:4px;height:20%;background:rgba(255,255,255,.38);border-radius:2px;
+}
+.status-voice-bars-live .status-voice-bar{background:var(--gold);}
+
+/* ---------- Composer / sheet: idle → recording → preview states ---------- */
+.status-voice-comp{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  width:100%;padding:20px 10px;box-sizing:border-box;
+}
+.status-voice-comp-icon{font-size:26px;color:rgba(255,255,255,.85);}
+.status-voice-record-btn{
+  width:72px;height:72px;border-radius:50%;background:var(--gold);color:var(--teal-deep);border:none;
+  font-size:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+.status-voice-rec-dot{
+  width:11px;height:11px;border-radius:50%;background:#e0526b;
+  animation:statusVoiceRecPulse 1.1s ease-in-out infinite;
+}
+@keyframes statusVoiceRecPulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+.status-voice-stop-btn{
+  width:52px;height:52px;border-radius:50%;background:#e0526b;color:#fff;border:none;
+  font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+.status-voice-time{
+  font-size:13px;color:rgba(255,255,255,.8);font-family:'Hind Siliguri',sans-serif;min-width:40px;text-align:center;
+}
+.status-voice-hint, .status-audio-hint{
+  font-size:12.5px;color:rgba(255,255,255,.6);text-align:center;line-height:1.6;font-family:'Hind Siliguri',sans-serif;
+}
+.status-voice-comp-recording{width:100%;}
+.status-voice-comp-recording .status-voice-bars{width:100%;}
+
+/* Play/pause + waveform + progress tint, used by the composer's committed
+   preview, the sheet's record-preview, and (implicitly) reused classes in
+   the main viewer's voice item */
+.status-audio-preview-wrap, .status-voice-comp-preview .status-audio-preview-wrap{
+  position:relative;width:100%;display:flex;align-items:center;gap:12px;
+}
+.status-voice-play-btn{
+  width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;border:none;
+  font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+.status-voice-progress{
+  position:absolute;left:56px;right:0;top:0;bottom:0;width:0%;
+  background:rgba(192,151,58,.32);border-radius:6px;pointer-events:none;transition:width .1s linear;
+}
+.status-audio-time{
+  font-size:11.5px;color:rgba(255,255,255,.65);font-family:'Hind Siliguri',sans-serif;text-align:center;margin-top:2px;
+}
+
+/* ---------- Bottom sheet shared by voice/music record + music trim + the
+   highlights "save to which album" picker (status-highlights.js) ---------- */
+.status-audio-sheet{max-height:72vh;}
+.status-audio-sheet-body{padding:4px 18px 20px;overflow-y:auto;}
+.status-audio-loading{padding:30px 0;text-align:center;color:var(--ink-soft);font-size:13px;font-family:'Hind Siliguri',sans-serif;}
+.status-audio-loading i{margin-right:6px;}
+.status-audio-current{
+  display:flex;align-items:center;gap:11px;background:var(--panel);border:1.5px solid var(--line);
+  border-radius:16px;padding:9px 10px 9px 13px;margin-bottom:16px;transition:border-color .18s ease;
+}
+.status-audio-current:has(.status-music-lib-play.playing){border-color:var(--gold);}
+.status-audio-current-label{flex:1;min-width:0;font-size:12.5px;color:var(--ink);font-family:'Hind Siliguri',sans-serif;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.status-audio-source-row{display:flex;gap:10px;margin-bottom:10px;}
+.status-audio-source-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 8px;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;cursor:pointer;
+  color:var(--ink);font-family:'Hind Siliguri',sans-serif;font-size:12.5px;
+}
+.status-audio-source-btn i{font-size:19px;color:var(--gold);}
+.status-audio-hint{color:var(--ink-soft);margin-top:4px;}
+
+/* ---------- Personal "আমার মিউজিক" library (status-voice.js
+   statusMusicLib*) — previously picked+trimmed or recorded clips, one tap
+   to reuse. Deliberately flat/solid throughout — no shadow, blur or glow —
+   "modern" here comes from spacing, motion and a proper now-playing
+   indicator instead, reusing only the app's existing theme variables. ---------- */
+.status-music-lib-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin:22px 2px 10px;
+}
+.status-music-lib-head-title{
+  display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:var(--ink-soft);
+  font-family:'Hind Siliguri',sans-serif;text-transform:uppercase;letter-spacing:.04em;
+}
+.status-music-lib-head-title i{color:var(--gold);font-size:12px;}
+.status-music-lib-count{
+  background:var(--panel);border:1px solid var(--line);color:var(--ink-soft);border-radius:999px;
+  font-size:10.5px;font-weight:700;padding:1px 8px;font-family:'Hind Siliguri',sans-serif;
+}
+.status-music-lib-search-wrap{position:relative;flex:1;max-width:168px;}
+.status-music-lib-search-wrap i{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--ink-soft);pointer-events:none;
+}
+.status-music-lib-search{
+  width:100%;box-sizing:border-box;background:var(--panel);border:1.5px solid var(--line);border-radius:999px;
+  padding:7px 14px 7px 30px;color:var(--ink);font-size:12px;font-family:'Hind Siliguri',sans-serif;outline:none;
+  transition:border-color .18s ease;
+}
+.status-music-lib-search:focus{border-color:var(--gold);}
+.status-music-lib-list{
+  display:flex;flex-direction:column;gap:9px;max-height:244px;overflow-y:auto;margin-bottom:6px;padding:2px 2px 2px 0;
+  scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+}
+.status-music-lib-list::-webkit-scrollbar{width:5px;}
+.status-music-lib-list::-webkit-scrollbar-track{background:transparent;}
+.status-music-lib-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px;}
+@keyframes statusMusicRowIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+.status-music-lib-row{
+  display:flex;align-items:center;gap:11px;width:100%;background:var(--panel);border:1.5px solid var(--line);
+  border-radius:16px;padding:8px 11px 8px 8px;cursor:pointer;box-sizing:border-box;
+  animation:statusMusicRowIn .3s cubic-bezier(.2,.8,.2,1) both;
+  transition:border-color .16s ease,transform .12s ease;
+}
+.status-music-lib-row:active{transform:scale(.985);}
+.status-music-lib-row.playing{border-color:var(--gold);}
+.status-music-lib-row.playing .status-music-lib-name{color:var(--gold);}
+.status-music-lib-empty{
+  text-align:center;padding:20px 10px;color:var(--ink-soft);font-size:12px;font-family:'Hind Siliguri',sans-serif;
+}
+.status-music-lib-play{
+  width:38px;height:38px;border-radius:50%;background:var(--gold);color:var(--teal-deep);border:none;
+  font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+  transition:transform .14s ease;
+}
+.status-music-lib-play:active{transform:scale(.88);}
+.status-music-lib-eq{display:none;align-items:flex-end;justify-content:center;gap:2.5px;height:14px;width:14px;}
+.status-music-lib-play.playing i.fa-solid{display:none;}
+.status-music-lib-play.playing .status-music-lib-eq{display:flex;}
+.status-music-lib-eq i{width:2.5px;background:var(--teal-deep);border-radius:1px;animation:statusMusicEq .9s ease-in-out infinite;}
+.status-music-lib-eq i:nth-child(1){height:40%;animation-delay:-.7s;}
+.status-music-lib-eq i:nth-child(2){height:100%;animation-delay:-.3s;}
+.status-music-lib-eq i:nth-child(3){height:65%;animation-delay:-1s;}
+@keyframes statusMusicEq{0%,100%{transform:scaleY(.32);}50%{transform:scaleY(1);}}
+.status-music-lib-info{flex:1;min-width:0;}
+.status-music-lib-name{font-size:13px;font-weight:600;color:var(--ink);font-family:'Hind Siliguri',sans-serif;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .16s ease;}
+.status-music-lib-time{font-size:11px;color:var(--ink-soft);margin-top:2px;font-family:'Hind Siliguri',sans-serif;}
+.status-music-lib-del{
+  width:30px;height:30px;border-radius:50%;background:none;border:1.5px solid transparent;box-sizing:border-box;
+  color:var(--ink-soft);font-size:12px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:border-color .16s ease,color .16s ease;
+}
+.status-music-lib-del:active{color:#c94b60;border-color:#c94b60;}
+
+.status-audio-sheet .status-voice-comp{padding:14px 4px 4px;}
+.status-audio-sheet .status-voice-hint{color:var(--ink-soft);}
+.status-audio-sheet .status-audio-time{color:var(--ink-soft);}
+.status-audio-sheet .status-voice-play-btn{background:var(--sage);color:var(--teal-deep);}
+.status-audio-sheet .status-voice-bar{background:var(--line);}
+.status-audio-sheet .status-voice-bars-live .status-voice-bar{background:var(--gold);}
+
+.status-audio-actions{display:flex;gap:10px;margin-top:16px;}
+.status-sheet-btn{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 10px;border-radius:12px;
+  background:var(--panel);border:1px solid var(--line);color:var(--ink);cursor:pointer;
+  font-family:'Hind Siliguri',sans-serif;font-size:13px;font-weight:600;
+}
+.status-sheet-btn.primary{background:var(--gold);border-color:var(--gold);color:var(--teal-deep);}
+.status-sheet-btn.danger{background:none;border:none;color:#c94b60;flex:0 0 auto;padding:6px 4px;}
+.status-sheet-btn:disabled{opacity:.55;pointer-events:none;}
+
+/* ---------- Music trim (pick-a-file path) ---------- */
+.status-trim-wrap{padding-top:6px;}
+.status-trim-track{
+  position:relative;height:56px;background:var(--panel);border-radius:10px;overflow:hidden;
+  display:flex;align-items:flex-end;padding:0 2px;touch-action:none;
+}
+.status-trim-bars{display:flex;align-items:flex-end;gap:1.5px;width:100%;height:100%;padding:6px 0;box-sizing:border-box;}
+.status-trim-bars .status-voice-bar{background:var(--line);max-width:none;}
+.status-trim-window{
+  position:absolute;top:0;bottom:0;left:0;background:rgba(192,151,58,.35);
+  border:2px solid var(--gold);border-radius:8px;box-sizing:border-box;cursor:grab;touch-action:none;
+}
+.status-trim-window:active{cursor:grabbing;}
+
+/* ---------- Music chip: composer stage + main viewer, text/image slides
+   carrying background audio ---------- */
+.status-music-chip-comp{
+  position:absolute;left:16px;bottom:16px;display:flex;align-items:center;gap:7px;
+  background:rgba(0,0,0,.45);color:#fff;border-radius:16px;padding:6px 12px 6px 10px;
+  font-size:12px;font-family:'Hind Siliguri',sans-serif;max-width:calc(100% - 32px);
+}
+.status-music-chip-comp i{color:var(--gold);font-size:12px;flex-shrink:0;}
+.status-music-chip-comp span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.status-music-chip-comp button{
+  background:none;border:none;color:rgba(255,255,255,.7);font-size:12px;padding:0;margin-left:2px;
+  display:flex;align-items:center;cursor:pointer;flex-shrink:0;
+}
+.status-music-chip{
+  position:absolute;left:18px;bottom:18px;display:flex;align-items:center;gap:7px;
+  background:rgba(0,0,0,.4);color:#fff;border-radius:16px;padding:6px 13px;font-size:12px;
+  font-family:'Hind Siliguri',sans-serif;max-width:80%;z-index:1;
+}
+.status-music-chip i{color:var(--gold);font-size:12px;flex-shrink:0;}
+.status-music-chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ---------- Main viewer: full-screen voice-status item ---------- */
+.status-view-item-voice{padding:34px 30px;}
+.status-voice-view-icon{
+  width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:26px;
+}
+.status-voice-view-bars{
+  display:flex;align-items:flex-end;gap:3px;height:64px;width:100%;max-width:420px;
+}
+.status-voice-view-bars .status-voice-bar{background:rgba(255,255,255,.5);max-width:6px;}
+
+/* ---------- Highlights row (now lives on the প্রোফাইল page, under the bio
+   card — see js/profile-view.js — not the home tab) ---------- */
+#statusHighlightsRow:not(:empty){margin:0 0 14px;}
+.status-highlights-inner{padding-top:0;}
+.status-highlight-item .status-highlight-cover{
+  width:58px;height:58px;border-radius:50%;border:2px solid var(--gold-soft);box-sizing:border-box;
+}
+.status-highlight-item .status-avatar i{font-size:18px;}
+
+/* Bleeds to the screen edges like .profile-hero does (see
+   css/profile-page.css's -16px override) so the horizontal scroll feels
+   natural instead of stopping awkwardly at the page's own side padding. */
+.profile-highlights-row:not(:empty){margin:2px -16px 18px;padding:0 16px;overflow-x:auto;}
+.profile-highlights-row .status-highlights-inner{padding-bottom:2px;}
+
+/* ---------- Highlights save sheet: album chips + new-album input ---------- */
+.status-highlight-album-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.status-highlight-album-chip{
+  background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:14px;
+  font-size:12px;padding:7px 13px;cursor:pointer;font-family:'Hind Siliguri',sans-serif;
+}
+.status-highlight-new-row{display:flex;gap:10px;align-items:center;}
+.status-highlight-name-input{
+  flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:11px 14px;color:var(--ink);font-size:13.5px;font-family:'Hind Siliguri',sans-serif;outline:none;
+}
+.status-highlight-name-input:focus{border-color:var(--gold);}

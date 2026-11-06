@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="qr_shortcut_continue_short">পড়ুন</string>
+    <string name="qr_shortcut_continue_long">পড়া চালিয়ে যান</string>
+    <string name="qr_shortcut_search_short">খুঁজুন</string>
+    <string name="qr_shortcut_search_long">কুরআনে খুঁজুন</string>
+    <string name="qr_shortcut_prayer_short">নামাজ</string>
+    <string name="qr_shortcut_prayer_long">নামাজের সময়</string>
+    <string name="qr_shortcut_qibla_short">কিবলা</string>
+    <string name="qr_shortcut_qibla_long">কিবলার দিক</string>
+</resources>

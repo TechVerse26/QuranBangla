@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "api/story-submit.js": { "maxDuration": 30 },
+    "api/story-admin.js": { "maxDuration": 30 }
+  }
+}
