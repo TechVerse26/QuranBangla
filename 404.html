@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A211D">
+<title>404 — Page not found | Al Quran</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Serif+Bengali:wght@400;600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-deep:#0A211D;
+    --teal:#123A34;
+    --parchment:#EDE6D3;
+    --gold:#D9B45E;
+    --gold-soft:#E8D6A8;
+    --ink-soft:#B9C4BC;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    height:100%;
+    overflow-x:hidden;
+    background:
+      radial-gradient(circle at 15% -10%, rgba(217,180,94,.10), transparent 45%),
+      radial-gradient(circle at 100% 110%, rgba(122,74,199,.14), transparent 50%),
+      linear-gradient(160deg, var(--teal-deep) 0%, var(--teal) 55%, var(--teal-deep) 100%);
+    background-attachment:fixed;
+    color:var(--parchment);
+    font-family:'Hind Siliguri', sans-serif;
+  }
+  /* subtle islamic geometric star texture */
+  .pattern{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    opacity:.07;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23D9B45E' stroke-width='1'%3E%3Cpath d='M42 4 L52 24 L74 24 L58 40 L64 62 L42 50 L20 62 L26 40 L10 24 L32 24 Z'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:140px 140px;
+  }
+  /* twinkling stars */
+  .stars{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .star{
+    position:absolute; width:2px; height:2px; border-radius:50%;
+    background:var(--gold-soft);
+    animation:twinkle 3.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{ opacity:.15; transform:scale(1); }
+    50%{ opacity:.9; transform:scale(1.8); }
+  }
+  /* floating arabic calligraphy */
+  .calligraphy{
+    position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
+  }
+  .letter{
+    position:absolute;
+    bottom:-10%;
+    font-family:'Amiri', serif;
+    color:rgba(217,180,94,.16);
+    animation-name:drift;
+    animation-timing-function:ease-in;
+    animation-iteration-count:infinite;
+    will-change:transform, opacity;
+  }
+  @keyframes drift{
+    0%{ transform:translateY(0) rotate(0deg); opacity:0; }
+    10%{ opacity:1; }
+    85%{ opacity:.5; }
+    100%{ transform:translateY(-115vh) rotate(12deg); opacity:0; }
+  }
+  /* crescent moon */
+  .moon{
+    position:fixed; top:6%; right:8%; z-index:0;
+    width:70px; height:70px; border-radius:50%;
+    background:var(--gold-soft);
+    box-shadow:0 0 45px 8px rgba(217,180,94,.35);
+    -webkit-mask:radial-gradient(circle at 38% 40%, transparent 42%, #000 43%);
+            mask:radial-gradient(circle at 38% 40%, transparent 42%, #000 43%);
+    animation:glow 6s ease-in-out infinite;
+  }
+  @keyframes glow{
+    0%,100%{ box-shadow:0 0 45px 8px rgba(217,180,94,.35); }
+    50%{ box-shadow:0 0 60px 14px rgba(217,180,94,.55); }
+  }
+  /* tasbih (prayer beads) swinging like a pendulum */
+  .tasbih{
+    position:fixed; top:-18px; left:50%; z-index:0;
+    transform-origin:top center;
+    animation:sway 5s ease-in-out infinite;
+    pointer-events:none;
+    opacity:.55;
+  }
+  @keyframes sway{
+    0%,100%{ transform:translateX(-50%) rotate(-6deg); }
+    50%{ transform:translateX(-50%) rotate(6deg); }
+  }
+  .tasbih svg{ display:block; }
+
+  main{
+    position:relative; z-index:1;
+    min-height:100dvh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding:100px 24px 48px;
+    gap:18px;
+  }
+  .code{
+    font-family:'Amiri', serif;
+    font-size:clamp(72px, 22vw, 150px);
+    font-weight:700;
+    line-height:1;
+    background:linear-gradient(180deg, var(--gold-soft), var(--gold) 70%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 4px 18px rgba(217,180,94,.25));
+    animation:rise .7s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .arabic-line{
+    font-family:'Amiri', serif;
+    font-size:clamp(20px, 4.5vw, 30px);
+    color:var(--gold-soft);
+    letter-spacing:.5px;
+    animation:rise .7s .08s cubic-bezier(.2,.8,.2,1) both;
+  }
+  h1{
+    font-family:'Noto Serif Bengali', serif;
+    font-size:clamp(22px, 5vw, 32px);
+    font-weight:700;
+    color:var(--parchment);
+    animation:rise .7s .16s cubic-bezier(.2,.8,.2,1) both;
+  }
+  p.desc{
+    max-width:440px;
+    color:var(--ink-soft);
+    font-size:15px;
+    line-height:1.8;
+    animation:rise .7s .24s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(16px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .ayah-card{
+    margin-top:6px;
+    max-width:460px;
+    border:1px solid rgba(217,180,94,.25);
+    background:rgba(237,230,211,.04);
+    border-radius:16px;
+    padding:18px 22px;
+    backdrop-filter:blur(4px);
+    animation:rise .7s .32s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .ayah-ar{
+    font-family:'Amiri', serif;
+    font-size:19px;
+    color:var(--gold-soft);
+    line-height:1.9;
+  }
+  .ayah-bn{
+    margin-top:8px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .ayah-ref{
+    margin-top:6px;
+    font-size:11.5px;
+    color:rgba(185,196,188,.6);
+    letter-spacing:.3px;
+  }
+
+  .actions{
+    display:flex; gap:12px; flex-wrap:wrap; justify-content:center;
+    margin-top:8px;
+    animation:rise .7s .4s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:13px 26px;
+    border-radius:999px;
+    font-family:'Hind Siliguri', sans-serif;
+    font-weight:600; font-size:15px;
+    text-decoration:none;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .btn:active{ transform:scale(.96); }
+  .btn-primary{
+    background:linear-gradient(135deg, var(--gold-soft), var(--gold));
+    color:var(--teal-deep);
+    box-shadow:0 8px 24px rgba(217,180,94,.25);
+  }
+  .btn-primary:hover{ box-shadow:0 10px 30px rgba(217,180,94,.4); }
+  .btn-ghost{
+    background:transparent;
+    border-color:rgba(237,230,211,.25);
+    color:var(--parchment);
+  }
+  .btn-ghost:hover{ background:rgba(237,230,211,.06); }
+
+  .redirect-note{
+    margin-top:4px;
+    font-size:12.5px;
+    color:rgba(185,196,188,.65);
+    animation:rise .7s .48s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .redirect-note button{
+    background:none; border:none; color:var(--gold-soft);
+    text-decoration:underline; cursor:pointer; font-size:12.5px; font-family:inherit;
+    padding:0; margin-inline-start:4px;
+  }
+
+  @media (max-width:380px){
+    .moon{ width:50px; height:50px; top:4%; right:6%; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .letter, .star, .moon, .tasbih, .code, .arabic-line, h1, p.desc, .ayah-card, .actions, .redirect-note{
+      animation:none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="pattern"></div>
+<div class="stars" id="stars"></div>
+<div class="calligraphy" id="calligraphy"></div>
+<div class="moon"></div>
+
+<div class="tasbih">
+  <svg width="200" height="120" viewBox="0 0 200 120">
+    <path d="M100 0 C 40 30, 10 70, 100 110 C 190 70, 160 30, 100 0" fill="none" stroke="#D9B45E" stroke-width="1.4" opacity=".7"/>
+    <circle cx="100" cy="3" r="4" fill="#E8D6A8"/>
+    <circle cx="60" cy="22" r="4" fill="#D9B45E"/>
+    <circle cx="30" cy="52" r="4" fill="#D9B45E"/>
+    <circle cx="22" cy="82" r="4" fill="#D9B45E"/>
+    <circle cx="45" cy="102" r="4" fill="#D9B45E"/>
+    <circle cx="140" cy="22" r="4" fill="#D9B45E"/>
+    <circle cx="170" cy="52" r="4" fill="#D9B45E"/>
+    <circle cx="178" cy="82" r="4" fill="#D9B45E"/>
+    <circle cx="155" cy="102" r="4" fill="#D9B45E"/>
+    <circle cx="100" cy="112" r="6" fill="#E8D6A8"/>
+  </svg>
+</div>
+
+<main>
+  <div class="code">৪০৪</div>
+  <div class="arabic-line">لا يوجد هذا الطريق</div>
+  <h1>The path is lost.</h1>
+  <p class="desc">
+    The page you are looking for is not here right now — the link may have changed or the page may have been removed.
+Don't worry, we're taking you back to the right place.
+  </p>
+
+  <div class="ayah-card">
+    <div class="ayah-ar">اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ</div>
+    <div class="ayah-bn">"আমাদের সরল পথ দেখাও" — সূরা আল-ফাতিহা</div>
+    <div class="ayah-ref">৬ তম আয়াত</div>
+  </div>
+
+  <div class="actions">
+    <a href="./index.html" class="btn btn-primary">Return to homepage</a>
+    <a href="javascript:history.back()" class="btn btn-ghost">← Go to previous page</a>
+  </div>
+
+  <div class="redirect-note" id="redirectNote">
+    <span id="countdownText">Will be automatically taken back to home in 10 seconds.</span>
+    <button id="cancelRedirect" type="button">Cancel</button>
+  </div>
+</main>
+
+<script>
+  // ---------- Floating Arabic calligraphy letters ----------
+  const letters = ['ا','ب','ت','ث','ج','ح','خ','د','ر','س','ص','ط','ع','ف','ق','ك','ل','م','ن','ه','و','ي','﷽','الله'];
+  const calligraphyWrap = document.getElementById('calligraphy');
+  const LETTER_COUNT = window.innerWidth < 600 ? 12 : 20;
+  for(let i = 0; i < LETTER_COUNT; i++){
+    const span = document.createElement('span');
+    span.className = 'letter';
+    span.textContent = letters[Math.floor(Math.random() * letters.length)];
+    const size = 18 + Math.random() * 34;
+    span.style.left = Math.random() * 100 + '%';
+    span.style.fontSize = size + 'px';
+    span.style.animationDuration = (12 + Math.random() * 14) + 's';
+    span.style.animationDelay = (Math.random() * 14) + 's';
+    calligraphyWrap.appendChild(span);
+  }
+
+  // ---------- Twinkling stars ----------
+  const starsWrap = document.getElementById('stars');
+  const STAR_COUNT = window.innerWidth < 600 ? 30 : 55;
+  for(let i = 0; i < STAR_COUNT; i++){
+    const s = document.createElement('span');
+    s.className = 'star';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 70 + '%';
+    s.style.animationDelay = (Math.random() * 3.5) + 's';
+    starsWrap.appendChild(s);
+  }
+
+  // ---------- Gentle parallax on pointer move (desktop) ----------
+  if(window.matchMedia('(pointer:fine)').matches){
+    document.addEventListener('mousemove', (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 10;
+      const y = (e.clientY / window.innerHeight - 0.5) * 10;
+      calligraphyWrap.style.transform = `translate(${x}px, ${y}px)`;
+    });
+  }
+
+  // ---------- Auto-redirect countdown (cancellable) ----------
+  let secondsLeft = 10;
+  const countdownText = document.getElementById('countdownText');
+  const redirectNote = document.getElementById('redirectNote');
+  let timer = setInterval(() => {
+    secondsLeft--;
+    if(secondsLeft <= 0){
+      clearInterval(timer);
+      window.location.href = './index.html';
+      return;
+    }
+    countdownText.textContent = secondsLeft + ' Will be automatically taken back home in seconds.';
+  }, 1000);
+
+  document.getElementById('cancelRedirect').addEventListener('click', () => {
+    clearInterval(timer);
+    redirectNote.style.display = 'none';
+  });
+</script>
+
+</body>
+</html>

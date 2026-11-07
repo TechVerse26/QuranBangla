@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Quran in Bangla — Read, Listen, Search, Understand</title>
+<meta name="description" content="Quran with Arabic text, Bengali translation and recitation — fully usable offline.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#092723">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="কুরআন বাংলা">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- Platform switch (website vs. Android app). In a normal browser this only sets <html data-platform="web"> and
+     does nothing else; inside the Android app it loads the separate app UI layer (/app). See js/platform.js. -->
+<script src="js/platform.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Serif+Bengali:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&family=Baloo+Da+2:wght@400;500;600;700&family=Tiro+Bangla:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/reader.css">
+<link rel="stylesheet" href="css/search.css">
+<link rel="stylesheet" href="css/player.css">
+<link rel="stylesheet" href="css/app-shell.css">
+<link rel="stylesheet" href="css/planner.css">
+<link rel="stylesheet" href="css/topics.css">
+<link rel="stylesheet" href="css/library-stats.css">
+<link rel="stylesheet" href="css/stats-extra.css">
+<link rel="stylesheet" href="css/bottom-nav.css">
+<link rel="stylesheet" href="css/drawer.css">
+<link rel="stylesheet" href="css/modals.css">
+<link rel="stylesheet" href="css/prayer.css">
+<link rel="stylesheet" href="css/dictionary.css">
+<link rel="stylesheet" href="css/help.css">
+<link rel="stylesheet" href="css/onboarding.css">
+<link rel="stylesheet" href="css/ayah-of-day.css">
+<link rel="stylesheet" href="css/status.css">
+<link rel="stylesheet" href="css/status-extra.css">
+<link rel="stylesheet" href="css/story-moderation.css">
+<link rel="stylesheet" href="css/notes.css">
+<link rel="stylesheet" href="css/ramadan.css">
+<link rel="stylesheet" href="css/auth.css">
+<link rel="stylesheet" href="css/exam.css">
+<link rel="stylesheet" href="css/tajweed.css">
+<link rel="stylesheet" href="css/qibla.css">
+<link rel="stylesheet" href="css/download-manager.css">
+<link rel="stylesheet" href="css/theme-builder.css">
+<link rel="stylesheet" href="css/donation.css">
+<link rel="stylesheet" href="css/hadith.css">
+<link rel="stylesheet" href="css/ai-tafsir.css">
+<link rel="stylesheet" href="css/ai-tafsir-diagram.css">
+<link rel="stylesheet" href="css/session-security.css">
+<link rel="stylesheet" href="css/mfa.css">
+<link rel="stylesheet" href="css/profile-page.css">
+</head>
+<body data-theme="emerald">
+<script>
+// Apply the saved theme (and its dark-accent flag) before first paint, so
+// there's no flash of the default theme on reload.
+(function(){
+  try{
+    var t = localStorage.getItem('qr_theme');
+    var darkThemes = ['night','royal','amoled'];
+    if(t){
+      document.body.setAttribute('data-theme', t);
+      if(darkThemes.indexOf(t) !== -1) document.body.classList.add('theme-dark-accent');
+    }
+  }catch(e){}
+})();
+</script>
+
+<header>
+  <button class="menu-btn" id="menuBtn" aria-label="মেনু খুলুন">☰</button>
+  <div class="wordmark"><span class="ar">قرآن</span><span class="bn" id="headerTitle">Quran Bangla</span></div>
+  <div class="search-wrap">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="searchInput" type="text" placeholder="আয়াত খুঁজুন (বাংলা বা আরবি)...">
+  </div>
+  <div class="header-actions">
+    <span class="conn-status" id="connStatus"></span>
+    <button class="icon-btn install-btn" id="installBtn" style="display:none;">⬇ install app</button>
+    <button class="icon-btn" id="themeBtn" title="থিম" aria-label="থিম"><i class="fa-solid fa-palette"></i></button>
+  </div>
+</header>
+
+<div class="app-shell">
+
+  <!-- ================= HOME ================= -->
+  <section class="view active" id="view-home">
+    <div class="ramadan-banner" id="ramadanBanner">
+      <div class="rb-lanterns" aria-hidden="true"><span>🏮</span><span>🏮</span><span>🏮</span><span>🏮</span><span>🏮</span></div>
+      <div class="rb-icon"><i class="fa-solid fa-mosque"></i></div>
+      <div class="rb-text">
+        <div class="rb-title">রমজান মুবারক 🌙</div>
+        <div class="rb-sub">পবিত্র এই মাসে তেলাওয়াত ও তারাবীহ ট্র্যাক করুন</div>
+      </div>
+      <button class="rb-btn" id="ramadanBannerBtn">তারাবীহ <i class="fa-solid fa-chevron-left"></i></button>
+    </div>
+    <div id="homeLanding">
+      <div id="statusRow" class="status-row-wrap"></div>
+      <div id="ayahOfDayCard" class="aod-card"></div>
+    <div id="homeStreakRing"></div>
+    <div id="hifzReviewCard"></div>
+      <div class="section-title" id="lastReadTitle" style="display:none;">সর্বশেষ পড়েছিলেন</div>
+      <div class="chip-row" id="lastReadChips"></div>
+      <div class="section-title" id="quickLinkTitle">কুইক লিংক</div>
+      <div class="chip-row" id="quickLinkChips"></div>
+      <div class="home-subtabs" id="homeSubtabs">
+        <button data-mode="surah" class="active">সূরা</button>
+        <button data-mode="page">পৃষ্ঠা</button>
+        <button data-mode="juz">পারা</button>
+        <button data-mode="hizb">হিজব</button>
+        <button data-mode="ruku">রুকু</button>
+      </div>
+      <div id="homeListContainer"><div class="loader"><div class="spinner"></div><span>Loading...</span></div></div>
+    </div>
+    <div id="readerArea" style="display:none;">
+      <button class="back-btn" id="readerBackBtn">← ফিরে যান</button>
+      <div class="toolbar" id="readerToolbar" style="display:none;">
+        <button class="icon-btn hafez-toggle-btn" id="hafezModeBtn" title="হাফেজ মোড — শুধু আরবি, মুসহাফ স্টাইল"><i class="fa-solid fa-book-quran"></i> <span>হাফেজ মোড</span></button>
+        <button class="icon-btn hafez-test-btn" id="hafezTestBtn" style="display:none;" title="মুখস্থ যাচাই — ট্যাপ করে আয়াত দেখুন"><i class="fa-solid fa-eye-slash"></i> <span>মুখস্থ যাচাই</span></button>
+        <button class="icon-btn hifz-review-done-btn" id="hifzReviewDoneBtn" style="display:none;" title="আজকের রিভিউ সম্পন্ন হিসেবে চিহ্নিত করুন"><i class="fa-solid fa-check-double"></i> <span>রিভিউ সম্পন্ন</span></button>
+        <button class="icon-btn translit-toggle-btn" id="translitModeBtn" title="উচ্চারণ — বাংলা হরফে আরবি উচ্চারণ দেখুন"><i class="fa-solid fa-language"></i> <span>উচ্চারণ</span></button>
+        <button class="icon-btn" id="decFont" title="ফন্ট ছোট করুন">অ −</button>
+        <button class="icon-btn" id="incFont" title="ফন্ট বড় করুন">অ +</button>
+      </div>
+      <div class="hafez-page-hint" id="hafezPageHint" style="display:none;"></div>
+      <div id="mainContent"></div>
+    </div>
+  </section>
+
+  <!-- ================= PLANNER ================= -->
+  <section class="view" id="view-planner">
+    <div class="tabs" id="plannerTabs">
+      <button id="plTabMine" class="active">আমার প্ল্যানার</button>
+      <button id="plTabFind">প্ল্যানার খুঁজুন</button>
+      <button id="plTabDone">সম্পন্ন হয়েছে</button>
+    </div>
+    <div id="plannerListContainer"></div>
+  </section>
+
+  <!-- ================= TOPICS ================= -->
+  <section class="view" id="view-topics">
+    <div id="topicsListContainer"></div>
+    <div id="topicDetailContainer" style="display:none;">
+      <button class="back-btn" id="topicBackBtn">← ফিরে যান</button>
+      <div id="topicDetailBody"></div>
+    </div>
+  </section>
+
+  <!-- ================= LIBRARY ================= -->
+  <section class="view" id="view-library">
+    <div class="tabs" id="libraryTabs">
+      <button id="libTabBookmarks" class="active">Reserved</button>
+      <button id="libTabNotes">নোট</button>
+      <button id="libTabHistory">History</button>
+      <button id="libTabOffline">Offline</button>
+    </div>
+    <div id="libraryListContainer"></div>
+  </section>
+
+  <!-- ================= STATS ================= -->
+  <section class="view" id="view-stats">
+    <div id="statsContainer"></div>
+  </section>
+
+  <!-- ================= HADITH ================= -->
+  <section class="view" id="view-hadith">
+    <div id="hadithBooksContainer"></div>
+    <div id="hadithChaptersContainer" style="display:none;">
+      <button class="back-btn" id="hadithChaptersBackBtn">← ফিরে যান</button>
+      <div id="hadithBookHead"></div>
+      <button class="hadith-jump-btn" id="hadithJumpBtn"><i class="fa-solid fa-magnifying-glass"></i> হাদিস নম্বর দিয়ে খুঁজুন</button>
+      <div id="hadithChaptersList"></div>
+    </div>
+    <div id="hadithListContainer" style="display:none;">
+      <button class="back-btn" id="hadithListBackBtn">← অধ্যায়ে ফিরুন</button>
+      <div id="hadithChapterHead"></div>
+      <div id="hadithListBody"></div>
+    </div>
+  </section>
+
+  <!-- ================= EXAM ================= -->
+  <section class="view" id="view-exam">
+    <div class="exam-page-head">
+      <h2><i class="fa-solid fa-pen-to-square"></i> পরীক্ষা দিন</h2>
+      <p>নিচের যেকোনো পরীক্ষায় ট্যাপ করলেই সরাসরি সেই পরীক্ষা শুরু হবে।</p>
+      <!-- শুধু যাদের admins/{uid} ডকুমেন্টে isAdmin:true আছে তাদের জন্যই
+           দেখা যায় — পরীক্ষা ট্যাবে ঢোকার পরে যাচাই হয় (js/exam.js
+           checkExamAdminStatus)। ডিফল্টে লুকানো থাকে। -->
+      <button class="exam-admin-btn" id="examAdminBtn" style="display:none;">
+        <i class="fa-solid fa-user-shield"></i><span>এডমিন প্যানেল</span>
+      </button>
+    </div>
+    <div id="examListContainer">
+      <div class="loader"><div class="spinner"></div><span>লোড হচ্ছে...</span></div>
+    </div>
+  </section>
+
+  <!-- ================= EXAM CONSENT MODAL =================
+       একটা পরীক্ষা কার্ডে ট্যাপ করার পরে সরাসরি লিংক না খুলে এই মোডাল
+       দেখানো হয় — TechVerse প্ল্যাটফর্মে যাওয়ার আগে ব্যবহারকারীকে জানিয়ে
+       দেওয়া হয় যে সেখানে অ্যাকাউন্ট/Google সাইন-ইন লাগবে, এবং প্রাইভেসি
+       পলিসি ও হেল্প-সাপোর্ট পড়ার সুযোগ দেওয়া হয় — "এগিয়ে যান" বাটন
+       "I agree" চেকবক্স টিক না দেওয়া পর্যন্ত নিষ্ক্রিয় থাকে (js/exam.js
+       openExamConsentModal)। -->
+  <div class="app-modal" id="examConsentModal" style="display:none;">
+    <div class="app-modal-box exam-consent-box">
+      <div class="app-modal-head">
+        <div class="app-modal-head-title">
+          <h3><i class="fa-solid fa-circle-info"></i> পরীক্ষায় যাওয়ার আগে একটু পড়ে নিন</h3>
+        </div>
+        <button class="app-modal-close" id="examConsentClose">✕</button>
+      </div>
+      <div class="app-modal-body">
+        <p class="exam-consent-text">
+          এই পরীক্ষাটি আমাদের কুরআন বাংলা অ্যাপে নয়, বরং আমাদের পার্টনার <strong>TechVerse</strong> প্ল্যাটফর্মে অনুষ্ঠিত হয়। তাই "এগিয়ে যান"-এ চাপ দিলে আপনাকে TechVerse-এর ওয়েবসাইটে নিয়ে যাওয়া হবে।
+        </p>
+        <ul class="exam-consent-steps">
+          <li><i class="fa-solid fa-user-plus"></i><span>পরীক্ষা শুরু করতে প্রথমে সেখানে একটি অ্যাকাউন্ট তৈরি করতে হবে।</span></li>
+          <li><i class="fa-brands fa-google"></i><span>আগে থেকে অ্যাকাউন্ট না থাকলে চিন্তা নেই — সরাসরি Google দিয়ে সহজেই সাইন ইন করতে পারবেন।</span></li>
+        </ul>
+        <p class="exam-consent-text exam-consent-links-line">
+          যাওয়ার আগে একবার চোখ বুলিয়ে নিতে পারেন তাদের
+          <a href="https://tvcourse.vercel.app/#/privacy" target="_blank" rel="noopener">প্রাইভেসি পলিসি</a>
+          এবং
+          <a href="https://tvcourse.vercel.app/#/help" target="_blank" rel="noopener">হেল্প অ্যান্ড সাপোর্ট</a>
+          পেজে।
+        </p>
+        <label class="exam-consent-agree">
+          <input type="checkbox" id="examConsentCheck">
+          <span>আমি উপরের তথ্যগুলো পড়েছি এবং TechVerse প্ল্যাটফর্মে যেতে সম্মত (I agree)</span>
+        </label>
+        <div class="exam-consent-actions">
+          <button class="exam-consent-btn exam-consent-cancel" id="examConsentCancel">বন্ধ করুন</button>
+          <button class="exam-consent-btn exam-consent-proceed" id="examConsentProceed" disabled>
+            এগিয়ে যান <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PROFILE ================= -->
+  <!-- সাইন আপ/লগইন এবং সাইন-ইন করা প্রোফাইল — সরাসরি এই পেজেই দেখানো হয়,
+       কোনো পপ-আপ/মডাল হিসেবে নয় (দেখুন js/profile-view.js)। -->
+  <section class="view" id="view-profile">
+    <div id="profileViewContainer">
+      <div class="profile-page-loading">লোড হচ্ছে...</div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Bottom navigation -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bn-item active" data-view="home">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    <span data-i18n="nav_home">হোম</span>
+  </button>
+  <button class="bn-item" data-view="planner">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg>
+    <span data-i18n="nav_planner">প্ল্যানার</span>
+  </button>
+  <button class="bn-item" data-view="topics">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+    <span data-i18n="nav_topics">বিষয়ভিত্তিক</span>
+  </button>
+  <button class="bn-item" data-view="library">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6a3 3 0 013 3v13a2.5 2.5 0 00-2.5-2.5H4z"/><path d="M20 4h-6a3 3 0 00-3 3v13a2.5 2.5 0 012.5-2.5H20z"/></svg>
+    <span data-i18n="nav_library">লাইব্রেরি</span>
+  </button>
+  <button class="bn-item" data-view="hadith">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    <span data-i18n="nav_hadith">হাদিস</span>
+  </button>
+  <button class="bn-item" data-view="stats">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+    <span data-i18n="nav_stats">পরিসংখ্যান</span>
+  </button>
+  <button class="bn-item" data-view="exam">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    <span>পরীক্ষা</span>
+  </button>
+  <button class="bn-item" data-view="profile">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+    <span>প্রোফাইল</span>
+  </button>
+</nav>
+
+<!-- Hamburger "more" drawer -->
+<div class="scrim" id="scrim" style="display:none;"></div>
+<aside id="moreDrawer">
+  <div class="drawer-lanterns" aria-hidden="true"><span>🏮</span><span>🏮</span><span>🏮</span></div>
+  <div class="drawer-search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="drawerSearchInput" data-i18n-ph="menu_search_ph" placeholder="মেনুতে খুঁজুন...">
+  </div>
+  <div class="drawer-list">
+    <button class="drawer-item" id="drawerGoToAyah"><span class="di-ic"><i class="fa-solid fa-arrow-turn-up"></i></span> <span data-i18n="menu_goto_ayah">নির্দিষ্ট আয়াতে যান</span></button>
+    <button class="drawer-item" id="drawerAiTafsir"><span class="di-ic"><i class="fa-solid fa-wand-magic-sparkles"></i></span> <span>AI তাফসীর সহকারী</span></button>
+    <button class="drawer-item" id="drawerPrayerTimes"><span class="di-ic"><i class="fa-solid fa-clock"></i></span> <span data-i18n="menu_prayer_times">সালাতের সময়সূচি</span></button>
+    <button class="drawer-item" id="drawerQibla"><span class="di-ic"><i class="fa-solid fa-kaaba"></i></span> <span>কিবলার দিক</span></button>
+    <button class="drawer-item" id="drawerTaraweeh"><span class="di-ic"><i class="fa-solid fa-moon"></i></span> <span>তারাবীহ ট্র্যাকার</span></button>
+    <button class="drawer-item" id="drawerDictionary"><span class="di-ic"><i class="fa-solid fa-book-open"></i></span> <span data-i18n="menu_dictionary">অভিধান</span></button>
+    <button class="drawer-item" id="drawerExam"><span class="di-ic"><i class="fa-solid fa-pen-to-square"></i></span> <span>পরীক্ষা দিন</span></button>
+    <button class="drawer-item" id="drawerDownloads"><span class="di-ic"><i class="fa-solid fa-cloud-arrow-down"></i></span> <span>ডাউনলোড ম্যানেজার</span></button>
+    <button class="drawer-item" id="drawerOtherApps"><span class="di-ic"><i class="fa-solid fa-mobile-screen-button"></i></span> <span data-i18n="menu_other_apps">আমাদের অন্যান্য অ্যাপস</span></button>
+    <button class="drawer-item" id="drawerSettings"><span class="di-ic"><i class="fa-solid fa-gear"></i></span> <span data-i18n="menu_settings">সেটিংস</span></button>
+    <button class="drawer-item" id="drawerTranslationHelp"><span class="di-ic"><i class="fa-solid fa-language"></i></span> <span data-i18n="menu_translation_help">অনুবাদে সহায়তা করুন</span></button>
+    <button class="drawer-item" id="drawerShare"><span class="di-ic"><i class="fa-solid fa-share-nodes"></i></span> <span data-i18n="menu_share">অ্যাপটি শেয়ার করুন</span></button>
+    <button class="drawer-item" id="drawerHelp"><span class="di-ic"><i class="fa-solid fa-circle-question"></i></span> <span data-i18n="menu_help">সাহায্য ও সহযোগিতা</span></button>
+    <button class="drawer-item" id="drawerOnboarding"><span class="di-ic"><i class="fa-solid fa-route"></i></span> <span>অ্যাপ পরিচিতি (গাইড)</span></button>
+    <button class="drawer-item" id="drawerFeedback"><span class="di-ic"><i class="fa-solid fa-comment-dots"></i></span> <span data-i18n="menu_feedback">ফীডব্যাক শেয়ার করুন</span></button>
+  </div>
+  <div class="drawer-social">
+    <a href="#" id="socialWebsite" title="Website" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i></a>
+    <a href="#" id="socialFacebook" title="Facebook" target="_blank" rel="noopener"><i class="fa-brands fa-facebook"></i></a>
+    <a href="#" id="socialYoutube" title="YouTube" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+  </div>
+</aside>
+
+<!-- ================= Settings modal ================= -->
+<div class="app-modal" id="settingsModal" style="display:none;">
+  <div class="app-modal-box">
+    <div class="app-modal-head">
+      <div class="app-modal-head-title">
+        <button class="app-modal-back" id="settingsBackBtn" style="display:none;" aria-label="পেছনে"><i class="fa-solid fa-arrow-left"></i></button>
+        <h3 id="settingsModalTitle" data-i18n="settings_title">সেটিংস</h3>
+      </div>
+      <button class="app-modal-close" id="settingsClose">✕</button>
+    </div>
+    <div class="app-modal-body settings-body">
+
+      <!-- Category list: the first thing shown when Settings opens. Tapping a
+           category slides in that category's panel only (see wireSettingsNav
+           in js/menu.js) instead of dumping every setting on screen at once. -->
+      <div class="settings-cat-list" id="settingsCatList">
+        <button class="settings-cat-item" data-cat="lang">
+          <span class="settings-row-ic"><i class="fa-solid fa-globe"></i></span>
+          <span class="settings-cat-item-label">ভাষা ও অনুবাদ</span>
+          <i class="fa-solid fa-chevron-right settings-chevron"></i>
+        </button>
+        <button class="settings-cat-item" data-cat="recite">
+          <span class="settings-row-ic"><i class="fa-solid fa-microphone-lines"></i></span>
+          <span class="settings-cat-item-label">তিলাওয়াত ও পাঠ</span>
+          <i class="fa-solid fa-chevron-right settings-chevron"></i>
+        </button>
+        <button class="settings-cat-item" data-cat="appearance">
+          <span class="settings-row-ic"><i class="fa-solid fa-palette"></i></span>
+          <span class="settings-cat-item-label">চেহারা</span>
+          <i class="fa-solid fa-chevron-right settings-chevron"></i>
+        </button>
+        <button class="settings-cat-item" data-cat="prayer">
+          <span class="settings-row-ic"><i class="fa-solid fa-clock"></i></span>
+          <span class="settings-cat-item-label">নামাজ</span>
+          <i class="fa-solid fa-chevron-right settings-chevron"></i>
+        </button>
+        <button class="settings-cat-item" data-cat="special">
+          <span class="settings-row-ic"><i class="fa-solid fa-moon"></i></span>
+          <span class="settings-cat-item-label">বিশেষ মোড</span>
+          <i class="fa-solid fa-chevron-right settings-chevron"></i>
+        </button>
+      </div>
+
+      <div class="settings-cat-panel" data-cat="lang">
+      <div class="settings-section">
+        <div class="settings-section-title"><i class="fa-solid fa-globe"></i> ভাষা ও অনুবাদ</div>
+        <div class="settings-section-card">
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-language"></i></span>
+              <div class="settings-label" data-i18n="settings_language">ভাষা</div>
+            </div>
+            <div class="settings-control">
+              <button class="settings-btn" id="settingsLanguageBtn"><span id="settingsLanguageLabel">বাংলা</span> <i class="fa-solid fa-chevron-right settings-chevron"></i></button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-book-quran"></i></span>
+              <div class="settings-label" data-i18n="settings_translation">কুরআনের অনুবাদের ভাষা</div>
+            </div>
+            <div class="settings-control">
+              <button class="settings-btn" id="settingsTranslationBtn"><span id="settingsTranslationLabel">বাংলা</span> <i class="fa-solid fa-chevron-right settings-chevron"></i></button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-layer-group"></i></span>
+              <div class="settings-label">তুলনামূলক অনুবাদ <span class="settings-subnote">পাশাপাশি, সর্বোচ্চ ৩টি</span></div>
+            </div>
+            <div class="settings-control">
+              <button class="settings-btn" id="settingsCompareTrBtn"><span id="settingsCompareTrLabel">বন্ধ</span> <i class="fa-solid fa-chevron-right settings-chevron"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="settings-cat-panel" data-cat="recite">
+      <div class="settings-section">
+        <div class="settings-section-title"><i class="fa-solid fa-microphone-lines"></i> তিলাওয়াত ও পাঠ</div>
+        <div class="settings-section-card">
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-microphone-lines"></i></span>
+              <div class="settings-label" data-i18n="settings_reciter">ডিফল্ট ক্বারী</div>
+            </div>
+            <div class="settings-control">
+              <button class="settings-btn" id="settingsReciterBtn"><span id="settingsReciterLabel">…</span> <i class="fa-solid fa-chevron-right settings-chevron"></i></button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-text-height"></i></span>
+              <div class="settings-label" data-i18n="settings_font">ফন্ট সাইজ</div>
+            </div>
+            <div class="settings-control settings-stepper">
+              <button class="icon-btn" id="settingsDecFont" aria-label="ফন্ট ছোট করুন">−</button>
+              <button class="icon-btn" id="settingsIncFont" aria-label="ফন্ট বড় করুন">+</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-highlighter"></i></span>
+              <div class="settings-label">তাজভীদ হাইলাইট <span class="settings-subnote">আনুমানিক, শেখার সহায়ক</span></div>
+            </div>
+            <div class="settings-control">
+              <label class="switch"><input type="checkbox" id="settingsTajweedMode"><span class="switch-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="settings-cat-panel" data-cat="appearance">
+      <div class="settings-section">
+        <div class="settings-section-title"><i class="fa-solid fa-palette"></i> চেহারা</div>
+        <div class="settings-section-card">
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-palette"></i></span>
+              <div class="settings-label" data-i18n="settings_theme">থিম</div>
+            </div>
+            <div class="settings-control">
+              <button class="settings-btn" id="settingsThemeBtn"><span id="settingsThemeLabel">পান্না</span> <i class="fa-solid fa-chevron-right settings-chevron"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="settings-cat-panel" data-cat="prayer">
+      <div class="settings-section">
+        <div class="settings-section-title"><i class="fa-solid fa-clock"></i> নামাজ</div>
+        <div class="settings-section-card">
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-kaaba"></i></span>
+              <div class="settings-label" data-i18n="settings_prayer_method">নামাজের সময় হিসাবের পদ্ধতি</div>
+            </div>
+            <div class="settings-control">
+              <select id="settingsPrayerMethod"></select>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-bell"></i></span>
+              <div class="settings-label" data-i18n="settings_prayer_notify">নামাজের সময় বিজ্ঞপ্তি</div>
+            </div>
+            <div class="settings-control">
+              <label class="switch"><input type="checkbox" id="settingsPrayerNotify"><span class="switch-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="settings-cat-panel" data-cat="special">
+      <div class="settings-section">
+        <div class="settings-section-title"><i class="fa-solid fa-moon"></i> বিশেষ মোড</div>
+        <div class="settings-section-card">
+          <div class="settings-row">
+            <div class="settings-row-lead"><span class="settings-row-ic"><i class="fa-solid fa-moon"></i></span>
+              <div class="settings-label">রমজান মোড</div>
+            </div>
+            <div class="settings-control">
+              <label class="switch"><input type="checkbox" id="settingsRamadanMode"><span class="switch-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= Translation help modal ================= -->
+<!-- Lets a user pick an interface language and, for any UI string, save
+     their own custom translation — applied live via applyLanguage() in
+     js/menu.js (see js/translation-help.js for all the logic). -->
+<div class="app-modal" id="translationHelpModal" style="display:none;">
+  <div class="app-modal-box">
+    <div class="app-modal-head">
+      <div class="app-modal-head-title">
+        <button class="app-modal-back" id="trHelpBackBtn" style="display:none;" aria-label="পেছনে"><i class="fa-solid fa-arrow-left"></i></button>
+        <h3 id="trHelpTitle"><i class="fa-solid fa-language"></i> <span id="trHelpTitleText">অনুবাদে সহায়তা করুন</span></h3>
+      </div>
+      <button class="app-modal-close" id="trHelpClose">✕</button>
+    </div>
+    <div class="app-modal-body">
+
+      <div id="trHelpLangStep">
+        <p class="tr-help-intro">যে ভাষার লেখা ঠিক করতে বা যোগ করতে চান, সেটি বেছে নিন। আপনার দেওয়া অনুবাদ সাথে সাথে শুধু আপনার ডিভাইসে প্রয়োগ হবে।</p>
+        <div class="lang-picker-list" id="trHelpLangList"></div>
+      </div>
+
+      <div id="trHelpEditorStep" style="display:none;">
+        <div class="tr-help-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="trHelpSearch" placeholder="যা অনুবাদ করতে চান তা খুঁজুন...">
+        </div>
+        <div class="tr-help-actions">
+          <button class="settings-btn" id="trHelpExportBtn"><i class="fa-solid fa-copy"></i> <span>কাস্টম অনুবাদ কপি করুন</span></button>
+          <button class="settings-btn" id="trHelpResetAllBtn"><i class="fa-solid fa-rotate-left"></i> <span>সব রিসেট করুন</span></button>
+        </div>
+        <div class="tr-help-list" id="trHelpList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= Prayer times modal ================= -->
+<div class="app-modal" id="prayerModal" style="display:none;">
+  <div class="app-modal-box">
+    <div class="app-modal-head">
+      <h3><i class="fa-solid fa-clock"></i> <span data-i18n="prayer_title">সালাতের সময়সূচি</span></h3>
+      <button class="app-modal-close" id="prayerClose">✕</button>
+    </div>
+    <div class="app-modal-body" id="prayerBody">
+      <div class="prayer-status" id="prayerStatus" data-i18n="prayer_locating">অবস্থান শনাক্ত করা হচ্ছে...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Dictionary modal ================= -->
+<!-- AI তাফসীর/প্রশ্নোত্তর সহকারী — লজিক js/ai-tafsir.js, স্টাইল css/ai-tafsir.css -->
+<div class="app-modal" id="aiTafsirModal" style="display:none;">
+  <div class="app-modal-box ait-box">
+    <div class="app-modal-head">
+      <h3><i class="fa-solid fa-wand-magic-sparkles"></i> AI তাফসীর সহকারী</h3>
+      <div class="ait-head-actions">
+        <button class="app-modal-back ait-head-btn" id="aiTafsirNewChat" type="button" aria-label="নতুন আলোচনা" title="নতুন আলোচনা"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="app-modal-back ait-head-btn" id="aiTafsirHistoryBtn" type="button" aria-label="আগের আলোচনা" title="আগের আলোচনা"><i class="fa-solid fa-clock-rotate-left"></i></button>
+        <button class="app-modal-close" id="aiTafsirClose">✕</button>
+      </div>
+    </div>
+    <div class="ait-ctx" id="aiTafsirHeadCtx" style="display:none;"></div>
+    <div class="ait-chat-wrap">
+      <div class="ait-chat" id="aiTafsirChat"></div>
+      <div class="ait-history-panel" id="aiTafsirHistoryPanel" style="display:none;">
+        <div class="ait-history-topbar">
+          <span><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> আগের আলোচনা</span>
+          <button type="button" class="ait-history-close" id="aiTafsirHistoryClose" aria-label="বন্ধ করুন"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="ait-history-list" id="aiTafsirHistoryList"></div>
+      </div>
+      <button type="button" class="ait-scroll-bottom" id="aiTafsirScrollBottom" aria-label="সর্বশেষ বার্তায় যান"><i class="fa-solid fa-arrow-down"></i></button>
+    </div>
+    <div class="ait-chips" id="aiTafsirChips"></div>
+    <div class="ait-inputbar">
+      <textarea id="aiTafsirInput" rows="1" placeholder="আপনার প্রশ্ন লিখুন..."></textarea>
+      <button class="ait-send-btn" id="aiTafsirSend" type="button" aria-label="পাঠান"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+    <div class="ait-footer">
+      <span id="aiTafsirRemaining"></span>
+      <span class="ait-disclaimer">⚠️ এটি AI-জেনারেটেড ব্যাখ্যা, ফতোয়া নয় — গুরুত্বপূর্ণ ধর্মীয় বিষয়ে যোগ্য আলেমের পরামর্শ নিন।</span>
+    </div>
+  </div>
+</div>
+
+<div class="app-modal" id="dictionaryModal" style="display:none;">
+  <div class="app-modal-box">
+    <div class="app-modal-head">
+      <h3><i class="fa-solid fa-book-open"></i> <span data-i18n="dict_title">অভিধান</span></h3>
+      <button class="app-modal-close" id="dictClose">✕</button>
+    </div>
+    <div class="app-modal-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="dictSearchInput" data-i18n-ph="dict_search_ph" placeholder="শব্দ খুঁজুন...">
+    </div>
+    <div class="app-modal-body" id="dictList"></div>
+  </div>
+</div>
+
+<!-- ================= Help & support modal ================= -->
+<div class="app-modal" id="helpModal" style="display:none;">
+  <div class="app-modal-box">
+    <div class="app-modal-head">
+      <h3><i class="fa-solid fa-circle-question"></i> <span data-i18n="help_title">সাহায্য ও সহযোগিতা</span></h3>
+      <button class="app-modal-close" id="helpClose">✕</button>
+    </div>
+    <div class="app-modal-body" id="helpBody"></div>
+  </div>
+</div>
+
+<!-- ================= Taraweeh tracker modal ================= -->
+<div class="app-modal" id="taraweehModal" style="display:none;">
+  <div class="app-modal-box">
+    <div class="app-modal-head">
+      <h3><i class="fa-solid fa-moon"></i> তারাবীহ ট্র্যাকার</h3>
+      <button class="app-modal-close" id="taraweehClose">✕</button>
+    </div>
+    <div class="app-modal-body" id="taraweehBody"></div>
+  </div>
+</div>
+
+<!-- ================= Qibla direction modal ================= -->
+<div class="app-modal" id="qiblaModal" style="display:none;">
+  <div class="app-modal-box">
+    <div class="app-modal-head">
+      <h3><i class="fa-solid fa-kaaba"></i> <span>কিবলার দিক নির্দেশনা</span></h3>
+      <button class="app-modal-close" id="qiblaClose">✕</button>
+    </div>
+    <div class="app-modal-body" id="qiblaBody"></div>
+  </div>
+</div>
+
+<div class="search-panel" id="searchPanel" style="display:none;">
+  <div class="search-box">
+    <div class="search-box-head">
+      <h3 id="searchTitle">Search results</h3>
+      <button id="closeSearch">✕</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</div>
+
+<div class="player-bar" id="playerBar">
+
+  <div class="player-expanded" id="playerExpanded">
+    <div class="player-progress">
+      <span id="curTime">০:০০</span>
+      <input type="range" id="seekBar" min="0" max="100" value="0">
+      <span id="durTime">০:০০</span>
+    </div>
+    <div class="player-controls">
+      <button id="prevBtn" title="আগের আয়াত" aria-label="আগের আয়াত">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 10 7V5z"/></svg>
+      </button>
+      <button id="repeatBtn" class="repeat-btn" title="পুনরাবৃত্তি মোড: বন্ধ" aria-label="পুনরাবৃত্তি মোড">
+        <i class="fa-solid fa-repeat"></i>
+        <span class="repeat-tag" id="repeatTag"></span>
+      </button>
+      <button id="sleepTimerBtn" class="sleep-timer-btn" title="স্লিপ টাইমার" aria-haspopup="true" aria-expanded="false">
+        <i class="fa-solid fa-moon"></i>
+        <span class="sleep-timer-label" id="sleepTimerLabel">স্লিপ টাইমার</span>
+      </button>
+      <button id="nextBtn" title="পরের আয়াত" aria-label="পরের আয়াত">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4.5 6v12l10-6z"/></svg>
+      </button>
+      <div class="sleep-timer-popover" id="sleepTimerPopover" hidden>
+        <button type="button" data-min="0">বন্ধ করুন</button>
+        <button type="button" data-min="5">৫ মিনিট</button>
+        <button type="button" data-min="10">১০ মিনিট</button>
+        <button type="button" data-min="15">১৫ মিনিট</button>
+        <button type="button" data-min="30">৩০ মিনিট</button>
+        <button type="button" data-min="45">৪৫ মিনিট</button>
+        <button type="button" data-min="60">৬০ মিনিট</button>
+      </div>
+    </div>
+    <div class="player-extra">
+      <button class="speed-btn" id="speedBtn" title="প্লেব্যাক গতি">১x</button>
+      <button class="reciter-field" id="reciterFieldBtn" type="button" title="ক্বারী পরিবর্তন করুন" aria-haspopup="dialog">
+        <span class="reciter-ic">🎙️</span>
+        <span class="reciter-field-label" id="reciterFieldLabel">…</span>
+        <i class="fa-solid fa-chevron-down reciter-caret"></i>
+      </button>
+      <label><input type="checkbox" id="autoplayChk" checked><span class="lbl-full">পরের আয়াত চালাও</span></label>
+    </div>
+  </div>
+
+  <div class="player-collapsed" id="playerCollapsed">
+    <button class="pc-play-btn" id="playPauseBtn" title="চালু/বন্ধ করুন" aria-label="চালু/বন্ধ করুন">
+      <svg class="pc-ring" viewBox="0 0 48 48" width="46" height="46" aria-hidden="true">
+        <circle class="pc-ring-bg" cx="24" cy="24" r="20"></circle>
+        <circle class="pc-ring-fg" id="pcRingFg" cx="24" cy="24" r="20"></circle>
+      </svg>
+      <span class="buffer-ring"></span>
+      <span class="pc-ripple"></span>
+      <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+    </button>
+    <button class="player-info" id="playerInfoTap" type="button" aria-label="প্লেয়ার বড় করুন">
+      <span class="pi-ref" id="playerRef">—</span>
+      <span class="pi-title" id="playerTitle">Nothing is happening.</span>
+    </button>
+    <button class="pc-expand-btn" id="playerExpandBtn" aria-label="আরও নিয়ন্ত্রণ" aria-expanded="false">
+      <i class="fa-solid fa-chevron-up"></i>
+    </button>
+    <button class="player-close" id="playerClose" title="প্লেয়ার বন্ধ করুন" aria-label="প্লেয়ার বন্ধ করুন">✕</button>
+  </div>
+</div>
+
+<audio id="audioEl" preload="none"></audio>
+
+<script src="js/data.js" defer></script>
+<script src="js/surah-info.js" defer></script>
+<script src="js/surah-benefits.js" defer></script>
+<script src="js/i18n/bn.js" defer></script>
+<script src="js/i18n/en.js" defer></script>
+<script src="js/i18n/ar.js" defer></script>
+<script src="js/i18n/ur.js" defer></script>
+<script src="js/i18n/hi.js" defer></script>
+<script src="js/i18n/id.js" defer></script>
+<script src="js/i18n/tr.js" defer></script>
+<script src="js/i18n/fr.js" defer></script>
+<script src="js/i18n/es.js" defer></script>
+<script src="js/i18n/ru.js" defer></script>
+<script src="js/i18n/sw.js" defer></script>
+<script src="js/i18n/zh.js" defer></script>
+<script src="js/i18n/fa.js" defer></script>
+<script src="js/i18n/ms.js" defer></script>
+<script src="js/idb.js" defer></script>
+<script src="js/transliteration.js" defer></script>
+<script src="js/storage.js" defer></script>
+<script src="js/smart-storage.js" defer></script>
+
+<!-- Firebase (Auth + Firestore) — fill in js/firebase-config.js with your
+     project's keys. Safe to load even before it's configured: js/auth.js
+     checks isFirebaseConfigured() and simply stays inactive until then. -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js" defer></script>
+<script src="js/firebase-config.js" defer></script>
+<script src="js/error-logger.js" defer></script> 
+<!-- EmailJS — sends the OTP codes used before password change / account
+     deletion. Fill in js/emailjs-config.js with your EmailJS keys; see
+     that file for the one-time setup steps. Safe to load unconfigured. -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
+<script src="js/emailjs-config.js" defer></script>
+<script src="js/otp.js" defer></script>
+<script src="js/totp.js" defer></script>
+<script src="js/auth.js" defer></script>
+<script src="js/status.js" defer></script>
+<script src="js/status-voice.js" defer></script>
+<script src="js/status-highlights.js" defer></script>
+<script src="js/story-moderation.js" defer></script>
+<script src="js/mfa.js" defer></script>
+<script src="js/session-security.js" defer></script>
+<script src="js/reset-password.js" defer></script>
+<script src="js/push.js" defer></script>
+
+<script src="js/player.js" defer></script>
+<script src="js/reader.js" defer></script>
+<script src="js/ai-tafsir-diagram.js" defer></script>
+<script src="js/ai-tafsir.js" defer></script>
+<script src="js/sidebar.js" defer></script>
+<script src="js/search.js" defer></script>
+<script src="js/topics.js" defer></script>
+<script src="js/planner.js" defer></script>
+<script src="js/stats.js" defer></script>
+<script src="js/stats-trends.js" defer></script>
+<script src="js/audio-stats.js" defer></script>
+<script src="js/share-card.js" defer></script>
+<script src="js/ramadan.js" defer></script>
+<script src="js/tajweed.js" defer></script>
+<script src="js/qibla.js" defer></script>
+<script src="js/profile-view.js" defer></script>
+<script src="js/nav.js" defer></script>
+<script src="js/menu.js" defer></script>
+<script src="js/admin-moderation.js" defer></script>
+<script src="js/admin.js" defer></script>
+<script src="js/exam.js" defer></script>
+<script src="js/translation-help.js" defer></script>
+<script src="js/download-manager.js" defer></script>
+<script src="js/auto-offline.js" defer></script>
+<script src="js/theme-builder.js" defer></script>
+<script src="js/hadith.js" defer></script>
+<script src="js/donation-banner.js" defer></script>
+<script src="js/onboarding.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+/* ==== dictionary.css — in-app dictionary ==== */
+
+/* ---- Dictionary ---- */
+.dict-item{padding:12px 4px;border-bottom:1px solid var(--line);}
+.dict-item:last-child{border-bottom:none;}
+.dict-term{font-family:'Noto Serif Bengali',serif;font-size:15px;color:var(--gold);margin-bottom:3px;}
+body.theme-dark-accent .dict-term{color:var(--gold);}
+.dict-meaning{font-size:13.5px;color:var(--ink);line-height:1.5;}
+.dict-empty{text-align:center;color:var(--ink-soft);padding:24px;font-size:13.5px;}
+

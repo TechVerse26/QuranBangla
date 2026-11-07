@@ -1,0 +1,51 @@
+{
+  "name": "Quran in Bangla — Read, Listen, Search, Understand",
+  "short_name": "Quran Bangla",
+  "description": "Listen to the Quran's Arabic text, Bengali translation, and recitation even offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FBF6EC",
+  "theme_color": "#092723",
+  "lang": "bn",
+  "dir": "ltr",
+  "categories": ["books", "education", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "শেষ পঠিত স্থানে যান",
+      "short_name": "চালিয়ে যান",
+      "description": "আপনার সর্বশেষ পঠিত আয়াতে সরাসরি চলে যান",
+      "url": "./index.html?shortcut=continue",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "আয়াত খুঁজুন",
+      "short_name": "অনুসন্ধান",
+      "description": "বাংলা বা আরবিতে আয়াত অনুসন্ধান করুন",
+      "url": "./index.html?shortcut=search",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "কিবলা নির্দেশক",
+      "short_name": "কিবলা",
+      "description": "কিবলার দিক দেখুন",
+      "url": "./index.html?shortcut=qibla",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "পরিসংখ্যান",
+      "short_name": "পরিসংখ্যান",
+      "description": "আপনার স্ট্রিক, ব্যাজ ও অগ্রগতি দেখুন",
+      "url": "./index.html?shortcut=stats",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

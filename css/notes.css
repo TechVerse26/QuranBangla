@@ -1,0 +1,26 @@
+/* ==== notes.css — per-ayah personal notes ==== */
+
+/* ---- Per-ayah notes ---- */
+.ayah-actions .note-toggle-btn.has-note{color:var(--gold);border-color:var(--gold);}
+.note-preview-wrap:not(:empty){margin-top:8px;}
+.note-preview{
+  background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;padding:10px 12px;
+  font-size:13px;color:var(--ink);cursor:pointer;white-space:pre-wrap;
+}
+.note-edit-box{margin-top:8px;display:flex;flex-direction:column;gap:8px;}
+.note-textarea{
+  width:100%;min-height:80px;border-radius:10px;border:1px solid var(--line);background:var(--parchment);
+  color:var(--ink);font-family:'Hind Siliguri',sans-serif;font-size:13.5px;padding:10px 12px;resize:vertical;outline:none;
+}
+.note-textarea:focus{border-color:var(--gold);}
+.note-edit-actions{display:flex;gap:8px;justify-content:flex-end;}
+.note-edit-actions button{
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;
+  padding:6px 12px;font-size:12.5px;cursor:pointer;font-family:'Hind Siliguri',sans-serif;
+}
+.note-save-btn{background:var(--teal);color:var(--sage);border-color:var(--teal);}
+.note-delete-btn{color:#a3342c;border-color:#e3b3ac;margin-right:auto;}
+.note-item-text{
+  font-family:'Hind Siliguri',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block;
+}
+

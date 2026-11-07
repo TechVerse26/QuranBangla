@@ -1,0 +1,344 @@
+/* ==== status.css — WhatsApp-style "Status" feature ====
+   Row of circular avatars above the Daily-Ayah card (home tab), a
+   full-screen composer (one or more text/photo slides, each with its own
+   styling/crop/filters/stickers), and a full-screen story viewer with
+   segmented progress bars, a love-reaction heart, and a "who viewed" sheet
+   for the signed-in user's own status. Flat, solid colors only — no
+   glow/drop-shadow/blur "lighting" effects anywhere, matching the rest of
+   this file's own long-standing request (photo filters below only ever
+   touch brightness/contrast/saturation/hue, never blur() or drop-shadow()).
+   Everything is keyed off the app's existing theme variables (--parchment,
+   --panel, --ink, --gold, --line, etc.) from css/base.css so it re-skins
+   with the other 7 themes instead of only ever looking WhatsApp-green. */
+
+/* ---------- Row of circles (home tab, above the Daily-Ayah card) ---------- */
+.status-row-wrap{
+  margin:0 0 14px;
+}
+.status-row{
+  display:flex;align-items:flex-start;gap:14px;overflow-x:auto;
+  padding:2px 2px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.status-row::-webkit-scrollbar{display:none;}
+.status-item{
+  flex:0 0 auto;width:62px;display:flex;flex-direction:column;align-items:center;
+  gap:6px;background:none;border:none;padding:0;cursor:pointer;font-family:'Hind Siliguri',sans-serif;
+}
+.status-ring{
+  width:58px;height:58px;border-radius:50%;padding:3px;display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(var(--line) 0turn, var(--line) 1turn); /* default: no status → flat ring */
+  flex-shrink:0;
+}
+/* Has an unseen status → app-accent ring (gold), flat, segmented feel via conic-gradient stops when there are multiple items */
+.status-item.has-unseen .status-ring{
+  background:conic-gradient(var(--gold) 0turn, var(--gold) 1turn);
+}
+/* Fully seen → muted grey ring, same as WhatsApp's "already viewed" state */
+.status-item.all-seen .status-ring{
+  background:conic-gradient(var(--ink-soft) 0turn, var(--ink-soft) 1turn);
+}
+.status-item.locked .status-ring{ opacity:.55; }
+.status-avatar{
+  width:100%;height:100%;border-radius:50%;background:var(--panel);color:var(--parchment);
+  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;
+  overflow:hidden;position:relative;
+}
+.status-avatar i{font-size:19px;}
+.status-item.self .status-avatar{position:relative;}
+.status-plus-badge{
+  position:absolute;right:-2px;bottom:-2px;width:19px;height:19px;border-radius:50%;
+  background:var(--gold);color:var(--teal-deep);display:flex;align-items:center;justify-content:center;
+  font-size:11px;border:2px solid var(--parchment);
+}
+.status-label{
+  font-size:11px;color:var(--ink-soft);text-align:center;max-width:62px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;
+}
+.status-item.self .status-label{color:var(--ink);font-weight:600;}
+
+/* Logged-out prompt card, replaces the row entirely (viewing/posting a
+   status both require a completed sign-up/sign-in) */
+.status-locked-bar{
+  display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:12px 14px;cursor:pointer;
+}
+.status-locked-ic{
+  width:38px;height:38px;border-radius:50%;background:var(--teal);color:var(--sage);
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;
+}
+.status-locked-text{flex:1;min-width:0;}
+.status-locked-title{font-size:13.5px;font-weight:700;color:var(--ink);}
+.status-locked-sub{font-size:12px;color:var(--ink-soft);margin-top:1px;}
+.status-locked-bar .fa-chevron-left{color:var(--ink-soft);font-size:13px;}
+
+/* ---------- Shared full-screen overlay base ---------- */
+.status-overlay{
+  position:fixed;inset:0;z-index:75;display:none;background:#000;
+}
+.status-overlay.open{display:flex;flex-direction:column;}
+
+/* ================================================================
+   Composer — top chrome, slide tabs, stage (text or image), the
+   mode-dependent toolbar row, the swatch/filter bottom panel, and the
+   send bar.
+   ================================================================ */
+#statusComposerOverlay .status-comp-topbar{
+  display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+  padding-top:calc(14px + env(safe-area-inset-top,0px));flex-shrink:0;
+}
+.status-comp-close{
+  width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;
+  font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.status-comp-topbar-right{display:flex;gap:10px;}
+.status-comp-tool-btn{
+  position:relative;min-width:38px;height:38px;border-radius:19px;background:rgba(255,255,255,.12);border:none;color:#fff;
+  font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'Hind Siliguri',sans-serif;
+  padding:0 10px;gap:0;flex-shrink:0;
+}
+.status-comp-tool-btn.active{background:#fff;color:#111;}
+.status-comp-tool-btn.disabled{opacity:.35;pointer-events:none;}
+.status-comp-slide-badge{
+  position:absolute;right:-3px;top:-3px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;
+  background:var(--gold);color:var(--teal-deep);font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* Slide tabs — only shown once a second slide has been queued */
+.status-comp-slidetabs{
+  display:flex;gap:8px;padding:0 16px 10px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;
+}
+.status-comp-slidetabs::-webkit-scrollbar{display:none;}
+.status-comp-slide-tab{
+  flex:0 0 auto;width:34px;height:48px;border-radius:8px;border:1px solid rgba(255,255,255,.35);
+  background-color:#222;cursor:pointer;padding:0;
+}
+.status-comp-slide-tab.active{border-color:var(--gold);border-width:2px;}
+
+.status-comp-stage{
+  flex:1;display:flex;align-items:center;justify-content:center;position:relative;
+  min-height:0;overflow:hidden;padding:10px 22px;
+}
+.status-comp-textarea{
+  width:100%;max-width:480px;max-height:100%;background:none;border:none;outline:none;resize:none;
+  color:#fff;text-align:center;font-size:26px;line-height:1.45;overflow-y:auto;
+}
+.status-comp-textarea::placeholder{color:rgba(255,255,255,.55);}
+.status-comp-textarea.highlight{
+  background:rgba(20,20,20,.6);border-radius:14px;padding:14px 18px;box-sizing:border-box;
+}
+
+/* ---------- Image slide: crop/pan/zoom frame + text stickers ---------- */
+.status-img-frame{
+  position:relative;width:100%;height:100%;overflow:hidden;border-radius:8px;touch-action:none;
+}
+.status-img-frame-bg{
+  position:absolute;inset:-10%;background-size:cover;background-position:center;
+  filter:blur(32px) brightness(.55);
+}
+.status-crop-img{
+  position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;
+  transform-origin:center center;user-select:none;-webkit-user-drag:none;
+}
+.status-overlay-layer{position:absolute;inset:0;}
+.status-text-overlay{
+  position:absolute;transform:translate(-50%,-50%);color:#fff;font-family:'Hind Siliguri',sans-serif;
+  font-weight:700;white-space:pre-wrap;word-break:break-word;max-width:88%;text-align:center;
+  padding:4px 8px;border:1px dashed transparent;cursor:grab;touch-action:none;line-height:1.3;
+}
+.status-text-overlay.active{border-color:rgba(255,255,255,.7);}
+.status-text-overlay.placeholder{color:rgba(255,255,255,.65);}
+.status-overlay-textarea{
+  background:none;border:none;outline:none;resize:none;color:inherit;font:inherit;text-align:inherit;
+  width:180px;max-width:60vw;text-align:center;
+}
+
+/* ---------- Toolbar row (mode/selection-dependent action icons) ---------- */
+.status-comp-toolbar{
+  display:flex;gap:10px;padding:0 16px 10px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;
+}
+.status-comp-toolbar::-webkit-scrollbar{display:none;}
+.status-comp-size-btn{font-size:14px;padding:0 12px;}
+.status-comp-size-label{
+  min-width:26px;height:38px;display:flex;align-items:center;justify-content:center;color:#fff;
+  font-size:13px;font-family:'Hind Siliguri',sans-serif;flex-shrink:0;
+}
+
+/* ---------- Bottom panel: colour/gradient/text-colour tabs, or filter chips ---------- */
+.status-comp-bottompanel{min-height:0;flex-shrink:0;}
+.status-comp-panel-tabs{display:flex;gap:6px;justify-content:center;padding:0 16px 8px;}
+.status-comp-panel-tab{
+  background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.75);border-radius:14px;
+  font-size:11.5px;padding:6px 12px;cursor:pointer;font-family:'Hind Siliguri',sans-serif;
+}
+.status-comp-panel-tab.active{background:#fff;color:#111;font-weight:700;}
+.status-comp-swatch-row{
+  display:flex;gap:10px;justify-content:center;padding:2px 16px 14px;flex-wrap:wrap;
+}
+.status-comp-swatch-dot{
+  width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0;
+}
+.status-comp-swatch-dot.active{border-color:#fff;}
+.status-comp-filter-row{
+  display:flex;gap:8px;justify-content:flex-start;padding:2px 16px 14px;overflow-x:auto;scrollbar-width:none;
+}
+.status-comp-filter-row::-webkit-scrollbar{display:none;}
+.status-comp-filter-chip{
+  flex:0 0 auto;background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:14px;
+  font-size:12px;padding:8px 14px;cursor:pointer;font-family:'Hind Siliguri',sans-serif;
+}
+.status-comp-filter-chip.active{background:var(--gold);color:var(--teal-deep);font-weight:700;}
+
+.status-comp-bottombar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));flex-shrink:0;
+}
+.status-comp-counter{
+  font-size:12px;color:rgba(255,255,255,.65);font-family:'Hind Siliguri',sans-serif;flex:1;min-width:0;
+}
+.status-comp-counter.warn{color:var(--gold);}
+.status-comp-send{
+  width:54px;height:54px;border-radius:50%;background:var(--gold);color:var(--teal-deep);border:none;
+  font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+.status-comp-send:disabled{opacity:.4;pointer-events:none;}
+.status-comp-send.busy i{animation:statusSpin .8s linear infinite;}
+@keyframes statusSpin{to{transform:rotate(360deg);}}
+
+/* ---------- Story viewer ---------- */
+#statusViewerOverlay .status-view-progress-row{
+  display:flex;gap:4px;padding:8px 8px 0;padding-top:calc(8px + env(safe-area-inset-top,0px));flex-shrink:0;
+}
+.status-view-progress-track{
+  flex:1;height:2.5px;background:rgba(255,255,255,.32);border-radius:2px;overflow:hidden;
+}
+.status-view-progress-fill{
+  height:100%;width:0%;background:#fff;border-radius:2px;
+}
+.status-view-progress-track.done .status-view-progress-fill{width:100%;}
+.status-view-progress-fill.animating{transition:width linear;}
+
+.status-view-header{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;flex-shrink:0;
+}
+.status-view-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--panel);color:var(--parchment);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;overflow:hidden;flex-shrink:0;
+}
+.status-view-who{flex:1;min-width:0;}
+.status-view-name{color:#fff;font-size:14px;font-weight:700;font-family:'Hind Siliguri',sans-serif;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.status-view-time{color:rgba(255,255,255,.7);font-size:11.5px;font-family:'Hind Siliguri',sans-serif;}
+.status-view-header-btn{
+  width:34px;height:34px;border-radius:50%;background:none;border:none;color:#fff;font-size:15px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+
+.status-view-stage{
+  flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;
+  overflow:hidden;
+}
+/* Gives every .status-view-item a real, definite box to size against — without
+   this, height:100%/max-height:% inside .status-view-item can't resolve (their
+   containing block's height stays 'auto'), so a tall photo renders at its raw
+   intrinsic size and gets silently clipped by this stage's overflow:hidden
+   instead of being scaled down to fit. */
+#statusViewItems{position:absolute;inset:0;}
+.status-view-tap-zone{position:absolute;top:0;bottom:0;width:32%;z-index:2;}
+.status-view-tap-zone.left{left:0;}
+.status-view-tap-zone.right{right:0;}
+.status-view-tap-zone.center{left:32%;right:32%;} /* double-tap here = love-react; never navigated before */
+.status-view-item{
+  width:100%;height:100%;position:relative;display:none;align-items:center;justify-content:center;flex-direction:column;
+  padding:34px;text-align:center;box-sizing:border-box;
+}
+.status-view-item.active{display:flex;}
+.status-view-item .status-view-text{font-size:28px;line-height:1.5;color:#fff;word-break:break-word;white-space:pre-wrap;}
+.status-view-item .status-view-text.highlight{
+  display:inline-block;max-width:88%;background:rgba(20,20,20,.6);border-radius:14px;padding:12px 18px;
+}
+/* Photo slides: full-bleed edge-to-edge. object-fit:contain only ever
+   letterboxes — it never crops — so the complete photo is always visible no
+   matter its aspect ratio; caption + music chip float over the bottom on a
+   soft gradient scrim instead of sharing flex space with the image, so the
+   photo itself gets the entire stage. */
+.status-view-item-image{padding:0;}
+.status-view-item-image img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:0;
+}
+.status-view-bottom-overlay{
+  position:absolute;left:0;right:0;bottom:0;z-index:1;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(to top, rgba(0,0,0,.62), rgba(0,0,0,0) 85%);
+}
+.status-view-bottom-overlay .status-view-caption{margin-top:0;}
+.status-view-bottom-overlay .status-music-chip{position:static;max-width:100%;}
+.status-view-item .status-view-caption{
+  color:#fff;font-size:14.5px;margin-top:14px;font-family:'Hind Siliguri',sans-serif;
+  background:rgba(0,0,0,.35);padding:8px 14px;border-radius:10px;max-width:90%;
+}
+
+/* Love-reaction heart-pop (double-tap the center zone). Pure transform +
+   opacity, no blur/shadow — just a quick scale-and-fade. */
+#statusViewHeartPopLayer{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;}
+.status-heart-pop{
+  position:absolute;transform:translate(-50%,-50%) scale(0);color:#fff;font-size:64px;
+  animation:statusHeartPop .7s ease-out forwards;
+}
+@keyframes statusHeartPop{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:0;}
+  20%{transform:translate(-50%,-50%) scale(1.15);opacity:1;}
+  40%{transform:translate(-50%,-50%) scale(1);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(1);opacity:0;}
+}
+
+.status-view-footer{
+  display:flex;align-items:center;gap:8px;padding:12px 16px;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));flex-shrink:0;
+}
+.status-view-viewers-btn{
+  display:flex;align-items:center;gap:8px;background:none;border:none;color:#fff;cursor:pointer;
+  font-family:'Hind Siliguri',sans-serif;font-size:13.5px;padding:6px 2px;
+}
+.status-view-viewers-btn i{font-size:14px;}
+.status-view-react-btn{
+  display:flex;align-items:center;gap:7px;background:none;border:none;color:#fff;cursor:pointer;
+  font-family:'Hind Siliguri',sans-serif;font-size:13.5px;padding:6px 8px;margin-left:auto;
+}
+.status-view-react-btn i{font-size:17px;}
+.status-view-react-btn.reacted i{color:#e0526b;}
+.status-view-delete-btn{
+  margin-left:auto;background:none;border:none;color:rgba(255,255,255,.8);font-size:15px;cursor:pointer;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+}
+
+/* ---------- "Who viewed" bottom sheet ---------- */
+.status-viewers-sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:78;background:var(--parchment);
+  border-radius:18px 18px 0 0;max-height:60vh;display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .22s ease;
+}
+.status-viewers-sheet.open{transform:translateY(0);}
+.status-viewers-sheet-handle{width:38px;height:4px;border-radius:3px;background:var(--line);margin:10px auto 4px;}
+.status-viewers-sheet-title{
+  font-family:'Noto Serif Bengali',serif;font-size:14.5px;color:var(--ink);text-align:center;
+  padding:6px 16px 12px;border-bottom:1px solid var(--line);
+}
+.status-viewers-list{overflow-y:auto;padding:6px 14px;}
+.status-viewer-row{display:flex;align-items:center;gap:10px;padding:9px 2px;}
+.status-viewer-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--panel);color:var(--parchment);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;
+}
+.status-viewer-name{flex:1;min-width:0;font-size:13.5px;color:var(--ink);font-family:'Hind Siliguri',sans-serif;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.status-viewer-heart{color:#e0526b;font-size:13px;flex-shrink:0;}
+.status-viewer-time{font-size:11.5px;color:var(--ink-soft);flex-shrink:0;}
+.status-viewers-empty{padding:26px 16px 34px;text-align:center;color:var(--ink-soft);font-size:13px;}
+.status-viewers-sheet-scrim{position:fixed;inset:0;z-index:77;background:rgba(10,20,17,.5);display:none;}
+.status-viewers-sheet-scrim.open{display:block;}
+
+@media (min-width:560px){
+  .status-view-item .status-view-text{font-size:32px;}
+}

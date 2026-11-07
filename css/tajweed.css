@@ -1,0 +1,8 @@
+/* ==== tajweed.css — approximate tajweed color highlighting (see js/tajweed.js) ==== */
+
+/* ---- Approximate tajweed color highlighting (see js/tajweed.js) ---- */
+.tj-qalqalah{color:#D64545;}
+.tj-ghunnah{color:#E08A2E;}
+.tj-noon{color:#3F9142;}
+.tj-madd{color:#2E7DBE;}
+

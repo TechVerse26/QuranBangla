@@ -1,0 +1,244 @@
+/* ==== player.css — smart collapsible bottom audio player ====
+   Structure: .player-bar wraps two siblings —
+     .player-expanded  (seek bar, prev/repeat/sleep-timer/next, speed/reciter/autoplay)
+     .player-collapsed (always visible: ring-progress play button, title, expand chevron, close)
+   .player-bar.expanded shows the expanded panel above the collapsed row. */
+
+.player-bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:55;
+  background:var(--player-bg, linear-gradient(180deg, var(--teal-deep) 0%, #071e1a 100%));
+  color:var(--player-text-color, var(--sage));
+  backdrop-filter:var(--player-blur, none);-webkit-backdrop-filter:var(--player-blur, none);
+  border-top:1px solid var(--gold);
+  transform:translateY(100%);transition:transform .3s ease;
+  box-shadow:0 -8px 24px rgba(0,0,0,.25);
+  width:100%;
+}
+.player-bar.visible{transform:translateY(0);}
+
+/* ---------- Collapsed row (always visible while a track is loaded) ---------- */
+.player-collapsed{
+  display:flex;align-items:center;gap:10px;
+  min-height:var(--player-h);
+  padding:8px 14px;
+}
+.pc-play-btn{
+  position:relative;flex-shrink:0;width:50px;height:50px;border-radius:50%;
+  background:none;border:none;color:var(--player-accent-bg, var(--gold));cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1);
+}
+.pc-play-btn:active{transform:scale(.9);}
+
+/* Solid gradient disc — subtle top-light so the button reads as raised/tactile
+   rather than a flat filled circle. */
+.pc-play-btn::before{
+  content:"";position:absolute;inset:4px;border-radius:50%;z-index:0;
+  background:radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--player-accent-bg, var(--gold)) 100%, white 22%) 0%, var(--player-accent-bg, var(--gold)) 62%, color-mix(in srgb, var(--player-accent-bg, var(--gold)) 100%, black 12%) 100%);
+  box-shadow:0 3px 12px rgba(217,180,94,.4), inset 0 1px 1px rgba(255,255,255,.5);
+  transition:box-shadow .3s ease, transform .3s ease;
+}
+/* Gentle breathing glow while tilawat is actually playing — the one cue
+   that instantly reads as "this is alive right now" even glanced at from
+   across the room, without being distracting like a hard blink/pulse. */
+.pc-play-btn.is-playing::before{
+  animation:pc-breathe 2.4s ease-in-out infinite;
+}
+@keyframes pc-breathe{
+  0%,100%{box-shadow:0 3px 12px rgba(217,180,94,.4), inset 0 1px 1px rgba(255,255,255,.5), 0 0 0 0 rgba(217,180,94,.35);}
+  50%{box-shadow:0 3px 16px rgba(217,180,94,.55), inset 0 1px 1px rgba(255,255,255,.5), 0 0 0 7px rgba(217,180,94,0);}
+}
+@media (prefers-reduced-motion: reduce){
+  .pc-play-btn.is-playing::before{animation:none;}
+}
+
+/* Play/pause icon morph — both icons are stacked and cross-fade + scale
+   instead of an instant display:none swap, so toggling feels intentional. */
+.pc-play-btn svg.icon-play,.pc-play-btn svg.icon-pause{
+  position:absolute;z-index:1;color:var(--player-accent-text, var(--teal-deep));
+  transition:opacity .22s ease, transform .22s cubic-bezier(.34,1.56,.64,1);
+}
+.pc-play-btn .icon-play{opacity:1;transform:scale(1) rotate(0deg);}
+.pc-play-btn .icon-pause{opacity:0;transform:scale(.5) rotate(-45deg);pointer-events:none;}
+.pc-play-btn.is-playing .icon-play{opacity:0;transform:scale(.5) rotate(45deg);pointer-events:none;}
+.pc-play-btn.is-playing .icon-pause{opacity:1;transform:scale(1) rotate(0deg);}
+
+.pc-ring{position:absolute;inset:0;transform:rotate(-90deg);z-index:1;filter:drop-shadow(0 0 2px rgba(217,180,94,.5));}
+.pc-ring-bg{fill:none;stroke:rgba(255,255,255,.16);stroke-width:2.5;}
+.pc-ring-fg{
+  fill:none;stroke:var(--player-accent-bg, var(--gold));stroke-width:2.75;stroke-linecap:round;
+  stroke-dasharray:125.6;stroke-dashoffset:125.6;transition:stroke-dashoffset .25s linear;
+}
+
+/* Buffering: a two-tone conic spinner instead of a plain border-spin, plus a
+   faint shimmer disc underneath so a stalled/offline load still feels like
+   "working on it" rather than a frozen UI. */
+.buffer-ring{
+  position:absolute;inset:-5px;border-radius:50%;z-index:2;
+  opacity:0;transition:opacity .2s ease;
+  background:conic-gradient(from 0deg, transparent 0%, var(--player-accent-bg, var(--gold)) 28%, transparent 60%);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+}
+.player-bar.buffering .pc-play-btn .buffer-ring{opacity:1;animation:spin .9s linear infinite;}
+@media (prefers-reduced-motion: reduce){
+  .player-bar.buffering .pc-play-btn .buffer-ring{animation:none;opacity:.6;}
+}
+
+/* Tap ripple: a short-lived expanding ring, triggered by JS adding/removing
+   .rippling on pointerdown so every tap gets tactile feedback. */
+.pc-play-btn .pc-ripple{
+  position:absolute;inset:0;border-radius:50%;z-index:3;pointer-events:none;
+  background:radial-gradient(circle, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 70%);
+  opacity:0;transform:scale(.6);
+}
+.pc-play-btn.rippling .pc-ripple{animation:pc-ripple .45s ease-out;}
+@keyframes pc-ripple{
+  0%{opacity:.65;transform:scale(.5);}
+  100%{opacity:0;transform:scale(1.35);}
+}
+
+.player-info{
+  flex:1;min-width:0;background:none;border:none;color:inherit;text-align:right;
+  display:flex;flex-direction:column;gap:1px;cursor:pointer;padding:2px 0;
+}
+[dir="ltr"] .player-info,.player-info{text-align:left;}
+.player-info .pi-ref{font-size:11.5px;color:var(--gold);}
+.player-info .pi-title{font-family:var(--font-heading,'Noto Serif Bengali'),serif;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+
+.pc-expand-btn, .player-close{
+  flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--sage);
+  border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s, transform .2s ease;
+}
+.pc-expand-btn:hover, .player-close:hover{background:rgba(255,255,255,.16);}
+.pc-expand-btn i{transition:transform .25s ease;}
+.player-bar.expanded .pc-expand-btn i{transform:rotate(180deg);}
+.player-close{font-size:15px;background:none;border:none;color:var(--ink-soft);}
+
+/* ---------- Expanded panel ---------- */
+.player-expanded{
+  max-height:0;overflow:hidden;opacity:0;
+  transition:max-height .28s ease, opacity .2s ease, padding .28s ease;
+  padding:0 18px;
+  border-bottom:1px dashed var(--border, rgba(255,255,255,.12));
+}
+.player-bar.expanded .player-expanded{
+  max-height:220px;opacity:1;padding:14px 18px 12px;
+}
+@media (prefers-reduced-motion: reduce){
+  .player-expanded{transition:none;}
+}
+
+.player-progress{display:flex;align-items:center;gap:10px;min-width:0;margin-bottom:10px;}
+.player-progress span{font-size:11px;color:var(--ink-soft);width:38px;flex-shrink:0;}
+.player-progress input[type=range]{flex:1;accent-color:var(--gold);min-width:0;}
+
+.player-controls{display:flex;align-items:center;justify-content:center;gap:14px;flex-shrink:0;position:relative;margin-bottom:10px;}
+.player-controls button{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--sage);
+  border-radius:50%;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .15s,transform .1s;
+}
+.player-controls button:hover{background:rgba(255,255,255,.16);}
+.player-controls button:active{transform:scale(.92);}
+
+.repeat-btn, .sleep-timer-btn{
+  position:relative;width:auto !important;border-radius:999px !important;padding:0 12px;gap:5px;font-size:11.5px;
+  font-family:var(--font-ui,'Hind Siliguri'),sans-serif;
+}
+.repeat-btn.mode-ayah, .repeat-btn.mode-surah{
+  background:var(--player-accent-bg, var(--gold)) !important;color:var(--player-accent-text, var(--teal-deep)) !important;
+  border-color:transparent !important;
+}
+.repeat-tag{font-weight:700;display:none;}
+.repeat-btn.mode-ayah .repeat-tag, .repeat-btn.mode-surah .repeat-tag{display:inline;}
+.sleep-timer-btn.active{background:var(--player-accent-bg, var(--gold)) !important;color:var(--player-accent-text, var(--teal-deep)) !important;border-color:transparent !important;}
+.sleep-timer-label{white-space:nowrap;}
+
+.sleep-timer-popover{
+  position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  background:var(--teal-deep, #0b2622);border:1px solid var(--border, rgba(255,255,255,.15));
+  border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:2px;
+  box-shadow:0 10px 28px rgba(0,0,0,.35);z-index:60;min-width:130px;
+}
+.sleep-timer-popover button{
+  background:none;border:none;color:var(--sage);font-family:var(--font-ui,'Hind Siliguri'),sans-serif;
+  font-size:12.5px;padding:8px 10px;border-radius:8px;cursor:pointer;text-align:right;width:100%;
+}
+.sleep-timer-popover button:hover{background:rgba(255,255,255,.1);}
+.sleep-timer-popover button.active{color:var(--gold);font-weight:700;}
+
+.player-extra{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.speed-btn{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:var(--player-accent-bg, var(--gold));
+  border-radius:999px;padding:6px 12px;font-family:var(--font-ui,'Hind Siliguri'),sans-serif;font-weight:700;font-size:12.5px;
+  cursor:pointer;min-width:46px;transition:background .15s;
+}
+.speed-btn:hover{background:rgba(255,255,255,.18);}
+.reciter-field{
+  display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;padding:6px 12px;color:var(--player-text-color, var(--sage));font-family:var(--font-ui,'Hind Siliguri'),sans-serif;font-size:12.5px;
+  cursor:pointer;transition:background .15s;max-width:190px;
+}
+.reciter-field:hover{background:rgba(255,255,255,.16);}
+.reciter-field:active{transform:scale(.98);}
+.reciter-ic{font-size:13px;flex-shrink:0;}
+.reciter-field-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.reciter-caret{font-size:9px;opacity:.75;flex-shrink:0;}
+.player-extra label{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;}
+
+@media (max-width:880px){
+  :root{ --player-h:64px; }
+  .menu-btn{display:block;}
+  aside{
+    position:fixed;top:0;left:0;bottom:0;width:80%;max-width:320px;z-index:50;
+    transform:translateX(-105%);transition:transform .25s ease;box-shadow:4px 0 20px rgba(0,0,0,.25);
+  }
+  aside.open{transform:translateX(0);}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:45;}
+  main{padding:16px 14px calc(30px + var(--player-h));}
+  .wordmark .bn{font-size:16px;}
+  .search-wrap{max-width:none;}
+  .header-actions .icon-btn span{display:none;}
+  .player-collapsed{padding:6px 10px;gap:8px;}
+  .player-bar.expanded .player-expanded{max-height:260px;}
+  .player-extra label span.lbl-full{display:none;}
+  .reciter-field{padding:5px 9px;max-width:120px;}
+  .reciter-field-label{font-size:11.5px;}
+  .sleep-timer-label{display:none;}
+}
+
+@media (max-width:400px){
+  .wordmark .bn{display:none;}
+  .player-controls{gap:8px;}
+  .repeat-btn, .sleep-timer-btn{padding:0 9px;}
+}
+
+/* ---------- Follow-along button ----------
+   Shown when the listener manually scrolls away from the playing ayah
+   while tilawat continues, so they can rejoin without auto-scroll fighting
+   their manual reading. Sits just above the fixed player bar. */
+.follow-ayah-btn{
+  position:fixed;left:50%;
+  bottom:calc(var(--player-h) + 14px);
+  transform:translate(-50%, 12px);
+  background:var(--gold);color:var(--teal-deep);
+  border:none;border-radius:999px;
+  padding:10px 18px;font-size:13px;font-weight:600;
+  font-family:var(--font-heading,'Noto Serif Bengali'),serif;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);
+  cursor:pointer;z-index:56;
+  opacity:0;pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease;
+}
+.follow-ayah-btn.visible{
+  opacity:1;pointer-events:auto;
+  transform:translate(-50%, 0);
+}
+.follow-ayah-btn:active{filter:brightness(.95);}
+@media (prefers-reduced-motion: reduce){
+  .follow-ayah-btn{transition:opacity .01ms linear;}
+}

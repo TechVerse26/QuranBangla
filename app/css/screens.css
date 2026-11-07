@@ -1,0 +1,478 @@
+/* ==========================================================================
+   Quran Bangla — ANDROID APP · screens
+   Home · Quran · Discover · Search · Reader · Saved · Notifications ·
+   More · Settings · Help · About
+   --------------------------------------------------------------------------
+   Same rules as tokens.css: loaded only inside the Android app, flat surfaces,
+   1px hairlines, no shadows / glow / heavy gradients. Colours always come from
+   the --qa-* tokens so light and dark follow the app theme automatically.
+   ========================================================================== */
+
+/* ---------- 0. shared refinements ---------- */
+html[data-platform="android-app"]{
+  /* anchors / scrollIntoView never end up under the top bar */
+  scroll-padding-top:calc(var(--header-h) + 8px);
+}
+/* cards inside a flex/grid stack are spaced by the stack's gap, not by the sibling margin */
+.qa-stack > .qa-card + .qa-card{margin-top:0;}
+
+/* rows that are information only (no action) do not react to touch */
+.qa-row-item[tabindex="-1"]{cursor:default;}
+.qa-row-item[tabindex="-1"]:active{background:transparent;}
+.qa-row > .qa-val{font-weight:700;color:var(--qa-text);}
+
+.qa-ic-wrap{display:inline-flex;align-items:center;color:var(--qa-primary);}
+.qa-ic-wrap.qa-muted{color:var(--qa-text-3);}
+.qa-ic-wrap svg{width:20px;height:20px;fill:currentColor;}
+
+.qa-hint{
+  font-size:13px;line-height:1.65;color:var(--qa-text-3);
+  margin:var(--qa-s-3) var(--qa-s-1) 0;
+}
+.qa-link-inline{
+  display:inline;padding:0;border:0;background:transparent;
+  color:var(--qa-primary);font:inherit;font-weight:700;font-size:13.5px;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;
+}
+.qa-wrap,.qa-chips.qa-wrap{flex-wrap:wrap;overflow:visible;}
+/* two-line preview text (saved ayahs, notes, notifications) */
+.qa-clamp,.qa-list-sub.qa-clamp{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+  white-space:normal;overflow:hidden;text-overflow:clip;line-height:1.5;
+}
+.qa-textarea{min-height:120px;resize:vertical;line-height:1.6;font-family:inherit;}
+
+/* hero text is shared by Home, Saved (offline summary) and Help */
+.qa-hero-kicker{font-size:12px;font-weight:700;letter-spacing:.4px;opacity:.82;}
+.qa-hero-title{font-size:22px;font-weight:700;line-height:1.3;margin:2px 0 0;}
+.qa-hero-sub{font-size:14px;line-height:1.5;opacity:.86;}
+
+/* ---------- 1. HOME ---------- */
+.qa-home{gap:var(--qa-s-3);}
+.qa-greet{padding:var(--qa-s-1) var(--qa-s-1) var(--qa-s-1);}
+.qa-greet-hi{font-size:22px;line-height:1.35;font-weight:700;color:var(--qa-text);}
+.qa-greet-date{font-size:13.5px;color:var(--qa-text-3);margin-top:2px;}
+
+.qa-announce{
+  display:flex;align-items:flex-start;gap:var(--qa-s-3);
+  padding:var(--qa-s-3) var(--qa-s-2) var(--qa-s-3) var(--qa-s-4);
+  border-radius:var(--qa-r-lg);
+  background:var(--qa-accent-container);color:var(--qa-on-accent-container);
+}
+.qa-announce-ic{
+  flex:0 0 auto;width:36px;height:36px;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:var(--qa-surface);color:var(--qa-accent);
+}
+.qa-announce-ic svg{width:20px;height:20px;fill:currentColor;}
+.qa-announce-main{flex:1 1 auto;min-width:0;padding-top:2px;}
+.qa-announce-title{font-size:15px;font-weight:700;line-height:1.4;}
+.qa-announce-text{font-size:14px;line-height:1.6;margin-top:2px;opacity:.92;white-space:pre-line;}
+.qa-announce .qa-link-btn{color:inherit;text-decoration:underline;text-underline-offset:3px;padding-inline-start:0;margin-top:2px;}
+.qa-announce > .qa-iconbtn{color:inherit;}
+
+.qa-hero{padding:var(--qa-s-5);display:flex;flex-direction:column;}
+.qa-hero .qa-progress{margin-top:var(--qa-s-3);}
+.qa-hero-btn{margin-top:var(--qa-s-4);align-self:flex-start;}
+
+.qa-home .qa-searchfield{
+  min-height:50px;background:var(--qa-surface);border:1px solid var(--qa-outline);
+}
+.qa-home .qa-searchfield:active{background:var(--qa-surface-2);}
+
+.qa-listen{display:flex;align-items:center;gap:var(--qa-s-4);padding:var(--qa-s-3) var(--qa-s-4);}
+.qa-listen-btn{
+  flex:0 0 auto;width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--qa-primary);color:var(--qa-on-primary);
+}
+.qa-listen-btn svg{width:24px;height:24px;fill:currentColor;}
+.qa-listen-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px;}
+.qa-listen-title{font-size:16px;font-weight:600;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.qa-daily{padding:var(--qa-s-4) var(--qa-s-4) var(--qa-s-2);}
+.qa-daily-head{display:flex;align-items:center;justify-content:space-between;gap:var(--qa-s-3);}
+.qa-daily-ref{font-size:12.5px;font-weight:700;color:var(--qa-accent);}
+.qa-daily-body{margin-top:var(--qa-s-3);}
+html[data-platform="android-app"] .qa-daily-ar{
+  font-size:26px;line-height:2.05;text-align:right;color:var(--qa-ar-ink);
+}
+.qa-daily-tr{
+  font-family:var(--qa-font-bn);font-size:15.5px;line-height:1.8;color:var(--qa-text-2);
+  margin-top:var(--qa-s-2);
+}
+.qa-daily-actions{
+  display:flex;align-items:center;gap:var(--qa-s-1);
+  margin:var(--qa-s-3) calc(var(--qa-s-2) * -1) 0;
+  padding-top:var(--qa-s-2);border-top:1px solid var(--qa-outline);
+}
+.qa-daily-actions > .qa-btn{margin-inline-start:var(--qa-s-2);}
+
+.qa-prayer{display:flex;align-items:stretch;padding:0;overflow:hidden;}
+.qa-prayer-main{flex:1 1 auto;min-width:0;padding:var(--qa-s-4);cursor:pointer;}
+.qa-prayer-main:active{background:var(--qa-surface-2);}
+.qa-prayer-title{font-size:20px;font-weight:700;line-height:1.4;margin:2px 0 2px;color:var(--qa-text);}
+.qa-prayer-main .qa-link-btn{padding-inline-start:0;}
+.qa-prayer-side{
+  flex:0 0 auto;width:84px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--qa-s-1);
+  border:0;border-inline-start:1px solid var(--qa-outline);background:transparent;
+  color:var(--qa-primary);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+}
+.qa-prayer-side:active{background:var(--qa-surface-2);}
+.qa-prayer-side svg{width:28px;height:28px;fill:currentColor;}
+
+.qa-progress-card .qa-daily-head{margin-bottom:var(--qa-s-3);}
+.qa-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--qa-s-2);margin-bottom:var(--qa-s-4);}
+.qa-stat{
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  padding:var(--qa-s-3);border-radius:var(--qa-r-md);background:var(--qa-surface-2);
+}
+.qa-stat-ic{display:flex;color:var(--qa-accent);}
+.qa-stat-ic svg{width:20px;height:20px;fill:currentColor;}
+.qa-stat-v{font-size:22px;font-weight:700;line-height:1.25;color:var(--qa-text);}
+.qa-stat-l{font-size:12px;line-height:1.35;color:var(--qa-text-3);}
+
+.qa-home-block{margin-top:var(--qa-s-1);}
+.qa-home-block > .qa-section-head,.qa-home-block > .qa-section-title{margin-top:var(--qa-s-2);}
+
+/* ---------- 2. QURAN ---------- */
+.qa-quran-head{
+  position:sticky;top:var(--header-h);z-index:3;
+  margin:calc(var(--qa-s-4) * -1) calc(var(--qa-s-4) * -1) var(--qa-s-2);
+  padding:var(--qa-s-3) var(--qa-s-4);
+  background:var(--qa-bg);
+}
+.qa-continue{
+  display:flex;align-items:center;gap:var(--qa-s-3);
+  width:100%;min-height:60px;padding:var(--qa-s-2) var(--qa-s-4);
+  border:0;border-radius:var(--qa-r-lg);
+  background:var(--qa-primary-container);color:var(--qa-on-primary-container);
+  font-family:inherit;text-align:start;cursor:pointer;
+}
+.qa-continue:active{opacity:.88;}
+.qa-continue-ic,.qa-continue-go{flex:0 0 auto;display:flex;align-items:center;}
+.qa-continue-go{opacity:.75;}
+.qa-continue svg{width:24px;height:24px;fill:currentColor;}
+.qa-continue-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;}
+.qa-continue-kicker{font-size:12px;font-weight:700;opacity:.8;line-height:1.4;}
+.qa-continue-title{font-size:16px;font-weight:700;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qa-continue-sm{min-height:56px;}
+
+.qa-last-chip{
+  display:inline-block;margin-top:2px;padding:1px 8px;border-radius:var(--qa-r-full);
+  background:var(--qa-accent-container);color:var(--qa-on-accent-container);font-weight:700;
+}
+.qa-gonum{display:flex;align-items:center;gap:var(--qa-s-3);}
+.qa-gonum .qa-input{flex:1 1 auto;min-width:0;}
+.qa-gonum .qa-btn{flex:0 0 auto;}
+.qa-numgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:var(--qa-s-2);}
+.qa-numcell{
+  min-height:48px;padding:0;
+  border:1px solid var(--qa-outline);border-radius:var(--qa-r-md);
+  background:var(--qa-surface);color:var(--qa-text);
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;
+}
+.qa-numcell:active{background:var(--qa-primary-container);color:var(--qa-on-primary-container);}
+
+/* ---------- 3. DISCOVER ---------- */
+.qa-discover > .qa-section-title:first-child{margin-top:var(--qa-s-1);}
+.qa-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--qa-s-3);}
+@media (min-width:560px){.qa-tiles{grid-template-columns:repeat(3,minmax(0,1fr));}}
+.qa-tile{
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  min-height:128px;padding:var(--qa-s-4);
+  border:1px solid var(--qa-outline);border-radius:var(--qa-r-lg);
+  background:var(--qa-surface);color:var(--qa-text);
+  font-family:inherit;text-align:start;cursor:pointer;
+}
+.qa-tile:active{background:var(--qa-surface-2);}
+.qa-tile-ic{
+  width:44px;height:44px;margin-bottom:var(--qa-s-2);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--qa-r-md);
+  background:var(--qa-primary-container);color:var(--qa-on-primary-container);
+}
+.qa-tile-ic svg{width:24px;height:24px;fill:currentColor;}
+.qa-tile-title{font-size:15.5px;font-weight:700;line-height:1.35;}
+.qa-tile-sub{font-size:12.5px;line-height:1.5;color:var(--qa-text-3);}
+
+/* ---------- 4. SEARCH ---------- */
+.qa-search-screen{padding-top:var(--qa-s-3);}
+.qa-search-notice:empty,.qa-search-block:empty{display:none;}
+.qa-search-block + .qa-search-block{margin-top:var(--qa-s-1);}
+.qa-results{
+  background:var(--qa-surface);border:1px solid var(--qa-outline);
+  border-radius:var(--qa-r-lg);overflow:hidden;
+}
+.qa-result{
+  display:block;width:100%;padding:var(--qa-s-3) var(--qa-s-4);
+  border:0;background:transparent;color:var(--qa-text);
+  font-family:inherit;text-align:start;cursor:pointer;
+  content-visibility:auto;contain-intrinsic-size:auto 96px;
+}
+.qa-result + .qa-result{border-top:1px solid var(--qa-outline);}
+.qa-result:active{background:var(--qa-surface-2);}
+.qa-result-ref{display:flex;align-items:center;gap:var(--qa-s-2);margin-bottom:var(--qa-s-1);}
+.qa-result-badge{
+  flex:0 0 auto;padding:1px 9px;border-radius:var(--qa-r-full);
+  background:var(--qa-primary-container);color:var(--qa-on-primary-container);
+  font-size:12px;font-weight:700;line-height:1.7;
+}
+.qa-result-title{font-size:14px;font-weight:600;color:var(--qa-text);min-width:0;}
+.qa-result-text{font-size:14.5px;line-height:1.7;color:var(--qa-text-2);}
+html[data-platform="android-app"] .qa-result-text.qa-ar{font-size:22px;line-height:2;color:var(--qa-ar-ink);text-align:right;}
+.qa-result-text mark{
+  background:var(--qa-accent-container);color:var(--qa-on-accent-container);
+  border-radius:3px;padding:0 2px;
+}
+.qa-load-more{margin-top:var(--qa-s-3);}
+
+/* ---------- 5. READER ---------- */
+.qa-reader-screen{
+  max-width:var(--qa-reader-max);
+  padding:0 0 calc(max(var(--qa-bottom-reserve,0px),var(--qa-safe-bottom)) + var(--qa-s-8));
+  animation:none;          /* a transform on this element would offset the fixed progress bar */
+}
+.qa-reader{padding:0 var(--qa-s-4);}
+.qa-reader-progress{
+  position:fixed;left:0;right:0;top:var(--header-h);height:3px;z-index:calc(var(--qa-z-topbar) - 1);
+  background:transparent;opacity:0;pointer-events:none;transition:opacity var(--qa-dur-2) var(--qa-ease);
+}
+.qa-reader-progress.qa-on{opacity:1;}
+.qa-reader-progress > span{display:block;width:0;height:100%;background:var(--qa-accent-strong);transition:width 140ms linear;}
+.qa-reader-skel{padding-top:var(--qa-s-4);}
+
+.qa-reader-head{text-align:center;padding:var(--qa-s-6) 0 var(--qa-s-4);}
+.qa-reader-ar{font-family:var(--qa-font-ar);font-size:40px;line-height:1.5;color:var(--qa-accent);}
+.qa-reader-name{margin:var(--qa-s-1) 0 0;font-size:22px;font-weight:700;line-height:1.35;color:var(--qa-text);}
+.qa-reader-meta{margin-top:2px;font-size:13.5px;color:var(--qa-text-3);}
+.qa-reader-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--qa-s-2);margin-top:var(--qa-s-4);}
+.qa-reader-actions .qa-btn.qa-on{background:var(--qa-success-container);color:var(--qa-success);}
+.qa-reader-head .qa-group{text-align:start;}
+.qa-bismillah{
+  margin-top:var(--qa-s-5);
+  font-family:var(--qa-font-ar);font-size:32px;line-height:2;color:var(--qa-ar-ink);
+  text-align:center;direction:rtl;
+}
+.qa-bismillah-sm{margin-top:var(--qa-s-2);font-size:27px;}
+.qa-surah-divider{
+  margin:var(--qa-s-6) 0 var(--qa-s-2);padding:var(--qa-s-3) var(--qa-s-4);
+  border-radius:var(--qa-r-md);text-align:center;
+  background:var(--qa-primary-container);color:var(--qa-on-primary-container);
+  font-size:17px;font-weight:700;
+}
+.qa-surah-divider .qa-bismillah-sm{color:inherit;font-weight:400;}
+
+/* one ayah = one article. The divider is a pseudo-element so highlighting a card never shifts the layout. */
+.qa-ayahs{display:flex;flex-direction:column;}
+.qa-ayah{
+  position:relative;
+  margin:0 calc(var(--qa-s-4) * -1);
+  padding:var(--qa-s-3) var(--qa-s-4) var(--qa-s-5);
+  transition:background-color var(--qa-dur-3) var(--qa-ease);
+}
+.qa-ayah::after{
+  content:'';position:absolute;left:var(--qa-s-4);right:var(--qa-s-4);bottom:0;height:1px;background:var(--qa-outline);
+}
+.qa-ayah:last-child::after{display:none;}
+.qa-ayah.qa-bookmarked::before{
+  content:'';position:absolute;top:var(--qa-s-3);bottom:var(--qa-s-5);inset-inline-start:0;width:3px;
+  border-radius:0 3px 3px 0;background:var(--qa-accent-strong);
+}
+.qa-ayah.qa-playing{background:var(--qa-playing);}
+.qa-ayah.qa-flash{animation:qa-flash 1.8s var(--qa-ease);}
+@keyframes qa-flash{0%,55%{background-color:var(--qa-accent-container);}100%{background-color:transparent;}}
+
+.qa-ayah-head{display:flex;align-items:center;gap:2px;margin-bottom:var(--qa-s-1);}
+.qa-ayah-num{
+  flex:0 0 auto;min-width:32px;height:32px;padding:0 9px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:var(--qa-r-full);
+  background:var(--qa-primary-container);color:var(--qa-on-primary-container);
+  font-size:13px;font-weight:700;
+}
+.qa-ayah-ref{
+  flex:0 1 auto;min-width:0;margin-inline-start:var(--qa-s-2);
+  font-size:13px;font-weight:600;color:var(--qa-text-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.qa-ayah-head .qa-iconbtn{color:var(--qa-text-3);}
+.qa-ayah-head .qa-iconbtn.qa-on{color:var(--qa-accent-strong);}
+
+/* Arabic text: the size comes from the reading setting (--qa-ar-size, set on .qa-reader) */
+html[data-platform="android-app"] .qa-ayah .qa-ar{
+  margin:var(--qa-s-1) 0 var(--qa-s-3);
+  font-size:var(--qa-ar-size,30px);line-height:2.15;
+  color:var(--qa-ar-ink);text-align:right;direction:rtl;
+  word-wrap:break-word;overflow-wrap:anywhere;
+}
+html[data-platform="android-app"] .qa-ayah .qa-ar .qw{
+  border-radius:6px;padding:1px 2px;
+  transition:background-color .18s ease,color .18s ease;
+}
+html[data-platform="android-app"] .qa-ayah .qa-ar .qw-active{
+  background:var(--qa-accent-container);color:var(--qa-on-accent-container);box-shadow:none;
+}
+/* tajweed colours stay readable on the dark theme */
+html[data-platform="android-app"][data-qa-scheme="dark"] .qa-ar .tj-qalqalah{color:#FF8F85;}
+html[data-platform="android-app"][data-qa-scheme="dark"] .qa-ar .tj-ghunnah{color:#FFB765;}
+html[data-platform="android-app"][data-qa-scheme="dark"] .qa-ar .tj-noon{color:#86D98A;}
+html[data-platform="android-app"][data-qa-scheme="dark"] .qa-ar .tj-madd{color:#74BBF2;}
+
+.qa-translit{
+  margin:0 0 var(--qa-s-2);
+  font-size:14px;font-style:italic;line-height:1.75;color:var(--qa-accent);
+}
+.qa-tr{
+  margin-top:var(--qa-s-2);
+  font-family:var(--qa-font-bn);font-size:var(--qa-tr-size,17px);line-height:1.85;
+  color:var(--qa-text-2);word-wrap:break-word;overflow-wrap:anywhere;
+}
+.qa-tr[dir="rtl"]{font-family:var(--qa-font-ar);text-align:right;line-height:2;}
+.qa-tr-compare{padding:var(--qa-s-2) var(--qa-s-3);border-radius:var(--qa-r-md);background:var(--qa-surface-2);}
+.qa-tr-label{
+  margin-bottom:2px;font-family:var(--qa-font-ui);font-size:12px;font-weight:700;
+  letter-spacing:.2px;color:var(--qa-accent);
+}
+.qa-no-tr .qa-tr{display:none;}
+.qa-note-line{
+  display:flex;align-items:flex-start;gap:var(--qa-s-2);
+  margin-top:var(--qa-s-3);padding:var(--qa-s-2) var(--qa-s-3);
+  border-radius:var(--qa-r-md);background:var(--qa-accent-container);color:var(--qa-on-accent-container);
+  font-size:14px;line-height:1.6;cursor:pointer;
+}
+.qa-note-line svg{flex:0 0 auto;margin-top:3px;}
+.qa-note-line span{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;}
+
+.qa-reader-foot{display:flex;justify-content:space-between;gap:var(--qa-s-3);padding:var(--qa-s-6) 0 var(--qa-s-2);}
+.qa-reader-foot .qa-btn{flex:1 1 0;max-width:50%;min-height:56px;padding:0 var(--qa-s-4);justify-content:space-between;border-radius:var(--qa-r-lg);}
+.qa-foot-label{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;line-height:1.3;text-align:start;}
+.qa-foot-label small{font-size:11.5px;font-weight:600;opacity:.75;}
+.qa-foot-label span{max-width:100%;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* hafez mode: Arabic only, one continuous mushaf-style block (same idea as the website) */
+.qa-hafez .qa-ayahs{display:block;direction:rtl;text-align:justify;padding:var(--qa-s-4) 0;}
+.qa-hafez .qa-ayah{display:inline;margin:0;padding:0;border-radius:6px;transition:none;}
+.qa-hafez .qa-ayah::before,.qa-hafez .qa-ayah::after{display:none;}
+.qa-hafez .qa-ayah-head,.qa-hafez .qa-tr,.qa-hafez .qa-translit,.qa-hafez .qa-note-line{display:none !important;}
+html[data-platform="android-app"] .qa-hafez .qa-ayah .qa-ar{display:inline;margin:0;line-height:2.6;}
+.qa-hafez .qa-surah-divider{display:block;direction:ltr;margin:var(--qa-s-5) 0;}
+.qa-endmark{margin:0 6px;font-family:var(--qa-font-ar);font-size:.8em;color:var(--qa-accent);white-space:nowrap;}
+/* memorisation test: every ayah is blurred until it is tapped */
+.qa-hafez-test .qa-ayah .qa-ar{filter:blur(7px);cursor:pointer;-webkit-user-select:none;user-select:none;transition:filter .25s ease;}
+.qa-hafez-test .qa-ayah.qa-revealed .qa-ar{filter:none;}
+
+/* surah information + reading settings sheets */
+.qa-info-body{display:flex;flex-direction:column;gap:var(--qa-s-2);}
+.qa-info-h{margin:var(--qa-s-3) 0 0;font-size:16px;font-weight:700;line-height:1.5;color:var(--qa-text);}
+.qa-info-h:first-child{margin-top:0;}
+.qa-info-p{margin:0;font-family:var(--qa-font-bn);font-size:15px;line-height:1.9;color:var(--qa-text-2);white-space:pre-line;}
+.qa-info-note{
+  margin:var(--qa-s-2) 0 0;padding:var(--qa-s-3);border-radius:var(--qa-r-md);
+  background:var(--qa-warning-container);color:var(--qa-warning);font-size:13px;line-height:1.65;
+}
+.qa-settings-preview{
+  padding:var(--qa-s-4);border:1px solid var(--qa-outline);border-radius:var(--qa-r-lg);background:var(--qa-bg);
+}
+.qa-settings-preview .qa-ar{line-height:2;text-align:right;margin-bottom:var(--qa-s-2);}
+
+/* ---------- 6. SAVED (bookmarks · notes · history · offline) + NOTIFICATIONS ---------- */
+.qa-lib-head{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--qa-s-2);
+  margin:0 var(--qa-s-1) var(--qa-s-3);
+}
+.qa-lib-head .qa-chips{margin:0;padding:0;overflow:visible;}
+.qa-lib-note{margin:var(--qa-s-5) var(--qa-s-2) 0;text-align:center;}
+.qa-num-wide{width:auto;min-width:54px;padding:0 var(--qa-s-2);font-size:13px;}
+.qa-library .qa-list-item,.qa-inbox .qa-list-item{contain-intrinsic-size:auto 92px;}
+.qa-offline-sum{display:flex;flex-direction:column;gap:2px;margin-bottom:var(--qa-s-3);}
+.qa-offline-sum > .qa-btn,.qa-help-foot > .qa-btn{align-self:flex-start;margin-top:var(--qa-s-3);}
+
+.qa-inbox-item{align-items:flex-start;position:relative;}
+.qa-inbox-item .qa-list-title{white-space:normal;}
+.qa-inbox-item.qa-unread{background:var(--qa-playing);}
+.qa-inbox-item.qa-unread .qa-list-title{font-weight:700;}
+.qa-inbox-ic{
+  flex:0 0 auto;width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--qa-r-md);background:var(--qa-surface-2);color:var(--qa-text-2);
+}
+.qa-inbox-ic svg{width:22px;height:22px;fill:currentColor;}
+.qa-cat-prayer{background:var(--qa-primary-container);color:var(--qa-on-primary-container);}
+.qa-cat-reminder{background:var(--qa-accent-container);color:var(--qa-on-accent-container);}
+.qa-cat-announcement{background:var(--qa-warning-container);color:var(--qa-warning);}
+.qa-cat-general{background:var(--qa-surface-2);color:var(--qa-text-2);}
+.qa-unread-dot{
+  position:absolute;top:var(--qa-s-4);inset-inline-end:var(--qa-s-4);
+  width:10px;height:10px;border-radius:50%;background:var(--qa-accent-strong);
+}
+
+/* ---------- 7. MORE · SETTINGS · HELP · ABOUT ---------- */
+.qa-more{display:flex;flex-direction:column;}
+.qa-account{display:flex;flex-direction:column;gap:var(--qa-s-4);padding:var(--qa-s-4);}
+.qa-account-main{
+  display:flex;align-items:center;gap:var(--qa-s-4);width:100%;padding:0;
+  border:0;background:transparent;color:inherit;font-family:inherit;text-align:start;cursor:pointer;
+}
+.qa-account-main.qa-static{align-items:flex-start;cursor:default;}
+.qa-account-text{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.qa-account-name{font-size:17px;font-weight:700;line-height:1.4;color:var(--qa-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qa-account-mail{font-size:13px;line-height:1.5;color:var(--qa-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qa-account-main.qa-static .qa-account-name,
+.qa-account-main.qa-static .qa-account-mail{white-space:normal;}
+.qa-trail-group{display:inline-flex;align-items:center;gap:var(--qa-s-2);}
+.qa-count-pill{
+  min-width:22px;height:22px;padding:0 7px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:var(--qa-r-full);background:var(--qa-primary);color:var(--qa-on-primary);
+  font-size:12px;font-weight:700;line-height:1;
+}
+.qa-footer-note{margin:var(--qa-s-6) 0 var(--qa-s-2);text-align:center;font-size:12.5px;color:var(--qa-text-3);}
+
+.qa-settings{display:flex;flex-direction:column;}
+.qa-set-section{scroll-margin-top:calc(var(--header-h) + var(--qa-s-3));}
+.qa-set-section > .qa-hint{margin:0 var(--qa-s-1) var(--qa-s-2);}
+.qa-set-section .qa-group + .qa-group{margin-top:var(--qa-s-3);}
+.qa-static-row .qa-row-sub{white-space:normal;}
+
+.qa-help-intro{margin:0 var(--qa-s-1) var(--qa-s-3);}
+.qa-faq-item + .qa-faq-item{border-top:1px solid var(--qa-outline);}
+.qa-faq-q{
+  display:flex;align-items:center;gap:var(--qa-s-3);
+  width:100%;min-height:56px;padding:var(--qa-s-3) var(--qa-s-4);
+  border:0;background:transparent;color:var(--qa-text);
+  font-family:inherit;font-size:15.5px;font-weight:600;line-height:1.5;text-align:start;cursor:pointer;
+}
+.qa-faq-q:active{background:var(--qa-surface-2);}
+.qa-faq-chev{flex:0 0 auto;display:flex;color:var(--qa-text-3);transition:transform var(--qa-dur-2) var(--qa-ease);}
+.qa-faq-chev svg{width:22px;height:22px;fill:currentColor;}
+.qa-faq-item.qa-open .qa-faq-chev{transform:rotate(180deg);}
+.qa-faq-a{padding:0 var(--qa-s-4) var(--qa-s-4);font-size:14.5px;line-height:1.8;color:var(--qa-text-2);}
+.qa-faq-a[hidden]{display:none !important;}
+.qa-faq-a p{margin:0 0 var(--qa-s-3);}
+.qa-help-foot{display:flex;flex-direction:column;gap:2px;margin-top:var(--qa-s-4);}
+
+.qa-about > .qa-group,.qa-about > .qa-section-title{margin-top:var(--qa-s-3);}
+.qa-about-hero{
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:var(--qa-s-6) var(--qa-s-4) var(--qa-s-4);
+}
+.qa-about-mark{
+  width:88px;height:88px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--qa-r-xl);border:1px solid var(--qa-outline-strong);
+  background:var(--qa-brand-teal);color:var(--qa-brand-gold);
+  font-family:var(--qa-font-ar);font-size:44px;line-height:1;
+}
+.qa-about-name{margin:var(--qa-s-4) 0 2px;font-size:22px;font-weight:700;line-height:1.35;color:var(--qa-text);}
+.qa-about-ver{margin:0;font-size:13.5px;color:var(--qa-text-3);}
+.qa-about-tag{margin:var(--qa-s-2) 0 0;max-width:300px;font-size:14px;line-height:1.6;color:var(--qa-text-2);}
+
+/* ---------- 8. motion preferences ---------- */
+@media (prefers-reduced-motion:reduce){
+  .qa-screen,.qa-sheet,.qa-scrim,.qa-dialog-wrap,.qa-snack,.qa-ayah,.qa-reader-progress > span,.qa-faq-chev{
+    animation-duration:.001ms !important;transition-duration:.001ms !important;
+  }
+  .qa-skel{animation:none;}
+}

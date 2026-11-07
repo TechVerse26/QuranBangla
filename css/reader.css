@@ -1,0 +1,285 @@
+/* ==== reader.css — surah header, surah info (shan-e-nuzul), ayah cards, compare-translation mode ==== */
+
+.surah-header{
+  background:var(--teal);color:var(--sage);border-radius:var(--radius);
+  padding:22px 26px;margin-bottom:22px;text-align:center;position:relative;overflow:hidden;
+}
+.surah-header::before,.surah-header::after{
+  content:'';position:absolute;top:50%;transform:translateY(-50%);width:120px;height:120px;
+  border:1px solid rgba(216,192,140,.25);border-radius:50%;
+}
+.surah-header::before{left:-60px;}
+.surah-header::after{right:-60px;}
+.surah-header .ar-name{font-family:'Amiri',serif;font-size:34px;color:var(--gold);position:relative;}
+.surah-header .bn-name{font-family:'Noto Serif Bengali',serif;font-weight:700;font-size:20px;margin-top:4px;position:relative;}
+.surah-header .meta{font-size:13px;color:var(--sage);opacity:.8;margin-top:6px;position:relative;}
+.header-btn-row{position:relative;display:flex;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.play-all-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--gold);color:var(--teal-deep);border:none;border-radius:999px;padding:9px 20px;
+  font-family:'Hind Siliguri',sans-serif;font-weight:700;font-size:14px;cursor:pointer;
+}
+.play-all-btn:hover{filter:brightness(1.06);}
+.offline-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.1);color:var(--sage);border:1px solid rgba(216,192,140,.4);border-radius:999px;
+  padding:9px 18px;font-family:'Hind Siliguri',sans-serif;font-weight:600;font-size:13px;cursor:pointer;
+  transition:background .2s;
+}
+.offline-btn:hover{background:rgba(255,255,255,.18);}
+.offline-btn.downloaded{background:var(--gold);color:var(--teal-deep);border-color:var(--gold);cursor:default;}
+.offline-btn:disabled{cursor:wait;opacity:.9;}
+.bismillah{
+  text-align:center;font-family:'Amiri',serif;font-size:26px;color:var(--teal);margin:18px 0 26px;
+}
+
+/* ---- সূরার পরিচিতি ও শানে নুযুল: trigger বাটন (popup ওপেন করে, js/reader.js openSurahInfoModal) ---- */
+.surah-info-trigger{
+  width:100%;display:flex;align-items:center;gap:11px;cursor:pointer;
+  background:var(--panel);border:1px solid var(--gold-soft);border-radius:var(--radius);
+  padding:13px 18px;margin-bottom:18px;font-family:'Hind Siliguri',sans-serif;font-weight:700;
+  font-size:14px;color:var(--teal);text-align:left;transition:background .2s,transform .15s;
+}
+.surah-info-trigger:hover{background:var(--sage);}
+.surah-info-trigger:active{transform:scale(.99);}
+.sit-icon{font-size:16px;color:var(--gold);flex-shrink:0;}
+.sit-label{flex:1;}
+.sit-arrow{color:var(--gold);font-size:13px;flex-shrink:0;transition:transform .15s;}
+.surah-info-trigger:hover .sit-arrow{transform:translateX(3px);}
+
+/* ---- সূরার পরিচিতি পপ-আপ মোডাল (app-modal শেল রিইউজ করে, নিজস্ব কনটেন্ট স্টাইল) ---- */
+.surah-info-modal .app-modal-box{max-width:560px;}
+.sit-modal-head{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:12px;
+  margin-bottom:14px;border-bottom:1px dashed var(--line);
+}
+.sit-modal-head .sit-modal-ar{font-family:'Amiri',serif;font-size:24px;color:var(--gold-deep,var(--gold));}
+.sit-modal-head .sit-modal-bn{font-family:'Noto Serif Bengali',serif;font-weight:700;font-size:15.5px;color:var(--ink);}
+.sit-modal-text{
+  font-family:'Noto Serif Bengali',serif;font-size:15px;line-height:2;color:var(--ink-soft);
+}
+.sit-modal-text .sit-hl{
+  background:var(--gold-soft);color:var(--teal-deep);border-radius:4px;padding:1px 4px;
+  font-weight:700;box-decoration-break:clone;-webkit-box-decoration-break:clone;
+}
+
+/* ---- সূরার ফজিলত/ব্যবহার ও রোগমুক্তি-সুরক্ষার প্রচলিত আমল — শানে নুযুলের ঠিক নিচে ---- */
+.sit-benefit-block{
+  margin-top:16px;padding:14px 16px;border-radius:var(--radius);
+  background:var(--panel);border:1px solid var(--gold-soft);
+}
+.sit-benefit-block + .sit-benefit-block{margin-top:12px;}
+.sit-benefit-title{
+  display:flex;align-items:center;gap:8px;font-family:'Hind Siliguri',sans-serif;font-weight:700;
+  font-size:13.5px;color:var(--teal);margin-bottom:8px;letter-spacing:.2px;
+}
+.sit-benefit-title i{color:var(--gold-deep,var(--gold));font-size:13px;}
+.sit-benefit-text{
+  font-family:'Noto Serif Bengali',serif;font-size:14.5px;line-height:1.95;color:var(--ink-soft);
+}
+.sit-benefit-text .sit-hl{
+  background:var(--gold-soft);color:var(--teal-deep);border-radius:4px;padding:1px 4px;
+  font-weight:700;box-decoration-break:clone;-webkit-box-decoration-break:clone;
+}
+.sit-benefit-ailment{background:var(--sage);}
+.sit-benefit-note{
+  margin-top:8px;font-family:'Hind Siliguri',sans-serif;font-size:12px;color:var(--ink-soft);
+  opacity:.75;font-style:italic;line-height:1.6;
+}
+
+.ayah-card{
+  display:flex;gap:16px;padding:20px 4px;border-bottom:1px dashed var(--line);align-items:flex-start;
+  border-radius:10px;transition:background .3s ease, box-shadow .3s ease, border-color .3s ease;
+  border-left:3px solid transparent;
+}
+.ayah-card.playing{
+  background:var(--surface, rgba(0,0,0,.02));
+  border-left-color:var(--gold);
+  box-shadow:0 2px 14px rgba(0,0,0,.06);
+}
+.ayah-card:last-child{border-bottom:none;}
+.medallion{
+  flex-shrink:0;width:38px;height:38px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.medallion svg{position:absolute;inset:0;}
+.medallion span{position:relative;font-size:12px;font-weight:700;color:var(--teal-deep);font-family:'Hind Siliguri',sans-serif;}
+.ayah-body{flex:1;min-width:0;}
+.ar-text{
+  font-family:'Amiri',serif;font-size:var(--ar-size,26px);line-height:2.1;direction:rtl;text-align:right;
+  color:var(--ink);margin-bottom:10px;word-wrap:break-word;
+}
+/* ---- তিলাওয়াতের সময় শব্দ-অনুযায়ী (word-by-word) হাইলাইট — js/reader.js
+   wrapArabicWords() প্রতিটি শব্দ .qw span এ মুড়ে দেয়, js/player.js
+   updateWordHighlight() প্লেব্যাক চলাকালীন .qw-active টগল করে ---- */
+.ar-text .qw{
+  border-radius:5px;padding:1px 2px;transition:background .18s ease,color .18s ease;
+}
+.ar-text .qw-active{
+  background:var(--gold-soft);color:var(--teal-deep);box-shadow:0 0 0 1px var(--gold-soft);
+}
+.bn-text{
+  font-family:'Noto Serif Bengali',serif;font-size:var(--bn-size,16px);line-height:1.85;color:var(--ink-soft);word-wrap:break-word;
+}
+
+/* ==== উচ্চারণ মোড (Transliteration mode) — js/transliteration.js এ জেনারেট
+   হওয়া বাংলা হরফের আনুমানিক উচ্চারণ, ar-text আর bn-text এর মাঝে বসে। ডিফল্টে
+   লুকানো, শুধু state.transliterationMode চালু থাকলে readerArea-তে বসা
+   .translit-mode ক্লাসের মাধ্যমে দেখা যায় — CSS-only টগল, রি-রেন্ডার লাগে না। ==== */
+.translit-text{
+  display:none;font-family:'Hind Siliguri',sans-serif;font-size:13.5px;font-style:italic;
+  color:var(--gold);line-height:1.7;margin:-4px 0 10px;word-wrap:break-word;
+}
+#readerArea.translit-mode .translit-text{display:block;}
+.hafez-mode .translit-text{display:none !important;}
+
+.ayah-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.ayah-actions button{
+  background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:6px;
+  font-size:11.5px;padding:3px 9px;cursor:pointer;font-family:'Hind Siliguri',sans-serif;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.ayah-actions button:hover{background:var(--sage);}
+.ayah-actions button.bookmarked{background:var(--gold);color:var(--teal-deep);border-color:var(--gold);}
+.ayah-actions button.play-toggle{
+  gap:6px;transition:background .25s ease, color .2s ease, border-color .2s ease, box-shadow .3s ease, transform .15s ease;
+}
+.ayah-actions button.play-toggle:active{transform:scale(.94);}
+.ayah-actions button.play-toggle.is-playing{
+  background:linear-gradient(135deg, var(--teal) 0%, var(--teal-deep) 100%);
+  color:var(--gold);border-color:var(--teal);
+  box-shadow:0 2px 10px rgba(11,38,34,.28), 0 0 0 1px rgba(217,180,94,.15) inset;
+  animation:ayah-play-glow 2.4s ease-in-out infinite;
+}
+@keyframes ayah-play-glow{
+  0%,100%{box-shadow:0 2px 10px rgba(11,38,34,.28), 0 0 0 0 rgba(217,180,94,.3);}
+  50%{box-shadow:0 2px 14px rgba(11,38,34,.32), 0 0 0 4px rgba(217,180,94,0);}
+}
+@media (prefers-reduced-motion: reduce){
+  .ayah-actions button.play-toggle.is-playing{animation:none;}
+}
+.eq-bars{display:inline-flex;align-items:flex-end;gap:2px;height:10px;}
+.eq-bars i{
+  display:block;width:2px;background:currentColor;border-radius:1px;
+  animation:eq-bounce 0.9s ease-in-out infinite;
+}
+.eq-bars i:nth-child(1){height:40%;animation-delay:-0.6s;}
+.eq-bars i:nth-child(2){height:100%;animation-delay:-0.3s;}
+.eq-bars i:nth-child(3){height:60%;animation-delay:0s;}
+@keyframes eq-bounce{0%,100%{transform:scaleY(0.4);}50%{transform:scaleY(1);}}
+@media (prefers-reduced-motion: reduce){
+  .eq-bars i{animation:none;height:70% !important;}
+}
+
+.loader{
+  display:flex;flex-direction:column;align-items:center;gap:14px;padding:70px 0;color:var(--ink-soft);
+}
+.spinner{
+  width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--gold);
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.error-box{
+  text-align:center;padding:40px;color:var(--ink-soft);
+}
+.error-box button{
+  margin-top:10px;background:var(--teal);color:var(--sage);border:none;border-radius:8px;
+  padding:8px 18px;cursor:pointer;font-family:'Hind Siliguri',sans-serif;
+}
+
+
+/* ---- Compare-translations picker (Settings → তুলনামূলক অনুবাদ) ---- */
+.compare-tr-hint{font-size:12px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;}
+.compare-tr-list{display:flex;flex-direction:column;gap:4px;}
+.compare-tr-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+  border:1px solid var(--line);cursor:pointer;font-family:'Hind Siliguri',sans-serif;font-size:14px;color:var(--ink);
+  transition:border-color .15s ease,background .15s ease;
+}
+.compare-tr-item.active{border-color:var(--gold);background:var(--sage);}
+.compare-tr-item input[type="checkbox"]{width:17px;height:17px;accent-color:var(--gold);flex-shrink:0;}
+
+/* ==== হাফেজ মোড (Hafez / memorization mode) ====
+   js/reader.js initHafezToolbar() টগল দুটি চালায়; state.hafezMode
+   readerArea-তে .hafez-mode ক্লাস যোগ করে (CSS-only রূপান্তর — DOM নতুন
+   করে রেন্ডার করার দরকার হয় না), state.hafezTestMode একইভাবে .hafez-test
+   ক্লাস যোগ করে। ==== */
+#readerToolbar{flex-wrap:wrap;justify-content:flex-start;}
+#readerToolbar .hafez-toggle-btn,#readerToolbar .hafez-test-btn{margin-right:auto;}
+#readerToolbar .hafez-test-btn{margin-right:0;}
+.icon-btn.hafez-toggle-btn.active,.icon-btn.hafez-test-btn.active,.icon-btn.translit-toggle-btn.active{
+  background:var(--gold);color:var(--teal-deep);border-color:var(--gold);
+}
+
+/* ---- হাফেজ মোড চালু থাকলে: অনুবাদ/নোট/অ্যাকশন লুকানো, মুসহাফের মতো একটানা
+   (continuous flow) আরবি টেক্সট — আয়াতের সীমানা রেখার বদলে ছোট্ট গোল
+   নম্বর-ব্যাজ, বড় ও আরাম-আরবি ফন্ট, উষ্ণ parchment ব্যাকগ্রাউন্ড ---- */
+.hafez-mode .surah-info-trigger,
+.hafez-mode .header-btn-row .offline-btn{display:none;}
+.hafez-mode .bn-text,
+.hafez-mode .ayah-actions,
+.hafez-mode .note-preview-wrap{display:none !important;}
+.hafez-mode .ayah-card{
+  display:inline;padding:0;border:none;border-radius:4px;background:none;
+}
+.hafez-mode .ayah-card.playing{background:var(--gold-soft);}
+.hafez-mode .ayah-body{display:inline;}
+.hafez-mode .ar-text{
+  display:inline;font-size:var(--ar-size,26px);line-height:2.6;margin:0;
+}
+.hafez-mode .medallion{
+  display:inline-flex;width:30px;height:30px;vertical-align:middle;margin:0 4px;position:relative;
+}
+.hafez-mode .medallion svg{width:30px;height:30px;}
+.hafez-mode #mainContent{
+  background:var(--parchment);border:1px solid var(--gold-soft);border-radius:var(--radius);
+  padding:22px 20px;box-shadow:inset 0 0 0 1px rgba(192,151,58,.08);
+  direction:rtl;text-align:justify;
+}
+.hafez-mode .surah-header,.hafez-mode .bismillah{direction:ltr;text-align:center;}
+.hafez-mode .surah-header{margin-bottom:16px;}
+
+/* ---- মুখস্থ যাচাই (tap-to-reveal memorization test): সব আয়াত ঝাপসা করে
+   রাখা হয়, ট্যাপ করলেই শুধু সেই আয়াতটি সাময়িকভাবে স্পষ্ট হয় ---- */
+.hafez-test .ar-text{
+  filter:blur(7px);cursor:pointer;user-select:none;transition:filter .25s ease;
+}
+.hafez-test .ayah-card.revealed .ar-text{filter:none;}
+.hafez-mode.hafez-test #mainContent::before{
+  content:'আয়াত স্পষ্ট করে দেখতে তাতে ট্যাপ করুন';
+  display:block;text-align:center;font-family:'Hind Siliguri',sans-serif;font-size:12.5px;
+  color:var(--ink-soft);margin-bottom:14px;background:var(--sage);border-radius:8px;padding:6px 10px;
+}
+
+/* ---- মুসহাফ পৃষ্ঠা মোডে যাওয়ার স্মার্ট চিপ (হাফেজ মোডে সূরা/জুয মোডে থাকলে) ---- */
+.hafez-page-hint{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--sage);border:1px solid var(--gold-soft);border-radius:10px;
+  padding:10px 14px;margin:-4px 0 14px;font-family:'Hind Siliguri',sans-serif;font-size:12.5px;color:var(--ink);
+}
+.hafez-page-hint button{
+  background:var(--gold);color:var(--teal-deep);border:none;border-radius:999px;
+  padding:6px 14px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;
+  font-family:'Hind Siliguri',sans-serif;
+}
+.hafez-page-nav{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 4px;
+}
+.hafez-page-nav button{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+  background:var(--teal);color:var(--sage);border:none;border-radius:10px;padding:11px;
+  font-family:'Hind Siliguri',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;
+}
+.hafez-page-nav button:disabled{opacity:.4;cursor:default;}
+
+/* ---- Side-by-side translations in the reader (compare mode) ---- */
+.bn-text-compare{
+  border-left:2.5px solid var(--gold-soft);padding-left:10px;margin-top:10px;
+}
+.bn-text-compare:first-of-type{margin-top:0;}
+.tr-edition-label{
+  font-family:'Hind Siliguri',sans-serif;font-size:11px;font-weight:700;color:var(--gold);
+  text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px;
+}
+

@@ -1,0 +1,24 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "story_submissions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "moderationStatus", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "story_submissions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": [
+    { "collectionGroup": "story_submissions", "fieldPath": "imageData", "indexes": [] },
+    { "collectionGroup": "story_submissions", "fieldPath": "audioData", "indexes": [] }
+  ]
+}

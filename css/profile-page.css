@@ -1,0 +1,48 @@
+/* ==== profile-page.css — "প্রোফাইল" bottom-nav PAGE (js/profile-view.js) ====
+   Sign up / login / forgot-password and the signed-in profile now live
+   directly inside #view-profile instead of the .auth-overlay / .app-modal
+   popups (css/auth.css, css/modals.css). Those two files still define all
+   the shared building blocks (.auth-field, .auth-cta-btn, .profile-hero,
+   .profile-stats-grid, ...) — this file only recalibrates the couple of
+   rules that assumed a modal/overlay's own padding, and gives the inline
+   auth screens a page-appropriate (non-fixed) layout. */
+
+#view-profile{ padding-top:2px; }
+
+.profile-page-loading{
+  text-align:center;padding:60px 10px;color:var(--ink-soft);font-size:13.5px;
+  font-family:var(--font-ui,'Hind Siliguri'),sans-serif;
+}
+
+/* ---- Signed-in profile: the hero cover/avatar bleed to the edges of
+   .app-shell (16px side padding) instead of a modal box's 18px, and the
+   cover's top corners no longer need rounding since it now sits at the
+   very top of a page section rather than inside a rounded modal box. ---- */
+#view-profile .profile-hero{ margin:0 -16px 4px; padding:0 16px; }
+#view-profile .profile-hero-cover{ margin:0 -16px; border-radius:0 0 var(--radius) var(--radius); }
+
+/* ---- Signed-out: sign up / login / forgot screens, inline in the page ----
+   Reuses .auth-screen/.auth-body/.auth-field/.auth-cta-btn etc. from
+   css/auth.css, but without the fixed .auth-overlay wrapper — screens are
+   toggled with a plain .active class instead of an open/closed overlay. */
+.profile-page-auth .auth-screen{ display:none; }
+.profile-page-auth .auth-screen.active{ display:block; }
+.profile-page-auth .auth-body{ padding:6px 0 30px; max-width:420px; margin:0 auto; }
+.profile-page-auth .auth-topbar{
+  position:static;background:none;color:var(--ink);padding:2px 0 12px;
+  font-family:var(--font-heading,'Noto Serif Bengali'),serif;font-weight:700;font-size:16px;
+}
+.profile-page-auth .auth-back{ color:var(--ink-soft);font-size:16px; }
+/* The root "choice" screen has nothing to go back to — hide its back arrow
+   rather than showing a dead button. */
+.profile-page-auth .auth-topbar.is-root{ padding-left:2px; }
+.profile-page-auth .auth-topbar.is-root .auth-back{ display:none; }
+
+@media (max-width:480px){
+  .bn-item svg{width:20px;height:20px;}
+  .bn-item{padding:6px 1px;}
+}
+@media (max-width:360px){
+  .bn-item span{font-size:8.7px;}
+  .bn-item svg{width:18px;height:18px;}
+}

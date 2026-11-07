@@ -1,0 +1,33 @@
+/* ==== qibla.css — qibla compass modal (see js/qibla.js) ==== */
+
+/* ---- Qibla compass modal ---- */
+.qibla-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:10px 4px 6px;text-align:center;}
+.qibla-compass{
+  position:relative;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle at 50% 42%, var(--panel) 0%, var(--sage) 100%);
+  border:3px solid var(--gold-soft);box-shadow:inset 0 0 0 1px var(--line);
+}
+.qibla-ring{position:absolute;inset:0;}
+.qibla-tick{
+  position:absolute;font-family:'Hind Siliguri',sans-serif;font-size:12.5px;font-weight:700;color:var(--ink-soft);
+}
+.qibla-tick-n{top:8px;left:50%;transform:translateX(-50%);color:var(--gold);}
+.qibla-tick-e{right:8px;top:50%;transform:translateY(-50%);}
+.qibla-tick-s{bottom:8px;left:50%;transform:translateX(-50%);}
+.qibla-tick-w{left:8px;top:50%;transform:translateY(-50%);}
+.qibla-needle{
+  position:absolute;top:50%;left:50%;width:2px;height:88px;
+  transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg);
+  transition:transform .12s linear;
+}
+.qibla-needle i{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  font-size:22px;color:var(--gold);text-shadow:0 1px 3px rgba(0,0,0,.25);
+}
+.qibla-needle::after{
+  content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);
+  width:8px;height:8px;border-radius:50%;background:var(--gold);
+}
+.qibla-deg{font-family:'Hind Siliguri',sans-serif;font-size:15px;font-weight:700;color:var(--ink);}
+.qibla-hint{font-size:12.5px;color:var(--ink-soft);max-width:280px;line-height:1.5;}
+

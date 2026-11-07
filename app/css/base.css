@@ -1,0 +1,337 @@
+/* ==========================================================================
+   Quran Bangla — ANDROID APP · base + shell layout
+   Hides the website chrome (header, bottom bar, drawer) and lays out the app
+   shell: top app bar, scrolling content, bottom navigation (or a navigation
+   rail on tablets), mini-player and the snackbar.
+   ========================================================================== */
+
+/* ---------- 1. Website chrome is not part of the app ---------- */
+html[data-platform="android-app"] body > header:not(.qa-topbar),
+html[data-platform="android-app"] #bottomNav,
+html[data-platform="android-app"] #moreDrawer,
+html[data-platform="android-app"] #scrim,
+html[data-platform="android-app"] #homeLanding,
+html[data-platform="android-app"] #readerBackBtn,
+html[data-platform="android-app"] #readerToolbar,
+html[data-platform="android-app"] #ramadanBanner,
+html[data-platform="android-app"] #searchPanel,
+html[data-platform="android-app"] .install-btn,
+html[data-platform="android-app"] .back-btn{
+  display:none !important;
+}
+
+/* ---------- 2. Page ---------- */
+html[data-platform="android-app"]{
+  -webkit-text-size-adjust:100%;
+  -webkit-tap-highlight-color:transparent;
+  scroll-behavior:auto;
+  overscroll-behavior-y:none;
+}
+/* The website clips horizontal overflow on BOTH <html> and <body> (css/base.css: html,body{overflow-x:hidden}). That makes
+   <body> an idle scroll container, and then `position:sticky;top:var(--header-h)` is resolved inside body's padding
+   (which is already --header-h) instead of against the viewport: sticky bars sat one top-bar height too low. In the
+   app only the root element keeps the clipping, so the viewport is the single scroller. */
+html[data-platform="android-app"] body{
+  overflow:visible;
+  background:var(--qa-bg);
+  background-image:none;
+  color:var(--qa-text);
+  font-family:var(--qa-font-ui);
+  font-size:16px;
+  line-height:1.5;
+  min-height:100vh;
+  min-height:100dvh;
+  /* the fixed top bar occupies --header-h (see tokens.css) */
+  padding-top:var(--header-h);
+  padding-left:0;
+  padding-right:0;
+  padding-bottom:0;
+  transition:none;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+/* Reading / typing areas stay selectable. */
+html[data-platform="android-app"] .ar-text,
+html[data-platform="android-app"] .bn-text,
+html[data-platform="android-app"] .translit-text,
+html[data-platform="android-app"] input,
+html[data-platform="android-app"] textarea,
+html[data-platform="android-app"] .qa-selectable,
+html[data-platform="android-app"] .note-preview,
+html[data-platform="android-app"] .sit-modal-text{
+  -webkit-user-select:text;
+  user-select:text;
+}
+html[data-platform="android-app"] button,
+html[data-platform="android-app"] [role="button"],
+html[data-platform="android-app"] a{
+  touch-action:manipulation;
+}
+html[data-platform="android-app"] :focus-visible{
+  outline:2px solid var(--qa-primary);
+  outline-offset:2px;
+}
+html[data-platform="android-app"] ::selection{background:var(--qa-primary-container);color:var(--qa-on-primary-container);}
+html[data-platform="android-app"] ::-webkit-scrollbar{width:0;height:0;}
+
+/* Quiet, consistent focus for form controls: a text field shows its focus with its own border / container (see
+   .qa-input:focus, .qa-topbar-search:focus-within), not with the keyboard-focus ring above - that ring would draw a
+   second, rectangular outline around the borderless field inside the rounded search bar. */
+html[data-platform="android-app"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible,
+html[data-platform="android-app"] textarea:focus-visible,
+html[data-platform="android-app"] select:focus-visible{
+  outline:0;
+}
+html[data-platform="android-app"] input,
+html[data-platform="android-app"] textarea,
+html[data-platform="android-app"] select,
+html[data-platform="android-app"] button{
+  font-family:var(--qa-font-ui);
+}
+
+/* ---------- 3. Shell root ---------- */
+/* The shell root is a <main>. The website's stylesheets style every bare `main` element (css/layout.css and
+   css/player.css give it padding and flex sizing), which would add a second, unwanted gutter around the app screens
+   (each .qa-screen already has its own padding). The app root therefore resets what the website sets on `main`. */
+.qa-root{
+  position:relative;
+  z-index:var(--qa-z-main);
+  flex:none;
+  width:auto;
+  min-width:0;
+  padding:0;
+  margin:0;
+}
+/* The legacy view host (planner / topics / hadith / stats / exam / profile and
+   the reader) is the website's own <div class="app-shell"> — it is reused
+   as-is and only re-skinned. */
+html[data-platform="android-app"] .app-shell{
+  max-width:var(--qa-content-max);
+  margin:0 auto;
+  padding:var(--qa-s-4) var(--qa-s-4) calc(max(var(--qa-bottom-reserve,0px),var(--qa-safe-bottom)) + var(--qa-s-6));
+  display:none;
+}
+html[data-platform="android-app"].qa-legacy-visible .app-shell{display:block;}
+/* The reader is the one legacy surface that is shown wide + edge to edge. */
+html[data-platform="android-app"].qa-reader-visible .app-shell{
+  max-width:var(--qa-reader-max);
+  padding-top:0;
+}
+
+/* ---------- 4. Screens (custom, app-native) ---------- */
+.qa-screen{
+  display:none;
+  max-width:var(--qa-content-max);
+  margin:0 auto;
+  padding:var(--qa-s-4) var(--qa-s-4) calc(max(var(--qa-bottom-reserve,0px),var(--qa-safe-bottom)) + var(--qa-s-6));
+  animation:qa-screen-in var(--qa-dur-2) var(--qa-ease);
+}
+.qa-screen.qa-active{display:block;}
+@keyframes qa-screen-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* ---------- 5. Top app bar ---------- */
+.qa-topbar{
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:var(--qa-z-topbar);
+  height:var(--header-h);
+  padding:var(--qa-safe-top) calc(var(--qa-s-2) + var(--qa-safe-right)) 0 calc(var(--qa-s-2) + var(--qa-safe-left));
+  display:flex;
+  align-items:center;
+  gap:var(--qa-s-1);
+  background:var(--qa-bg);
+  border-bottom:1px solid transparent;
+  transition:border-color var(--qa-dur-2) var(--qa-ease), background-color var(--qa-dur-2) var(--qa-ease);
+}
+.qa-topbar.qa-elevated{
+  border-bottom-color:var(--qa-outline);
+  background:var(--qa-surface);
+}
+.qa-topbar-lead{flex:0 0 auto;}
+.qa-topbar-titles{
+  flex:1 1 auto;
+  min-width:0;
+  padding:0 var(--qa-s-2);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.qa-topbar-title{
+  font-family:var(--qa-font-ui);
+  font-weight:700;
+  font-size:19px;
+  line-height:1.25;
+  color:var(--qa-text);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.qa-topbar-title.qa-brand{
+  display:flex;align-items:baseline;gap:var(--qa-s-2);
+}
+.qa-topbar-title .qa-brand-ar{
+  font-family:var(--qa-font-ar);
+  font-size:26px;
+  line-height:1;
+  color:var(--qa-accent);
+  font-weight:400;
+}
+.qa-topbar-sub{
+  font-size:12px;
+  line-height:1.3;
+  color:var(--qa-text-3);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.qa-topbar-actions{display:flex;align-items:center;flex:0 0 auto;}
+.qa-topbar-search{
+  flex:1 1 auto;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  height:44px;
+  margin:0 var(--qa-s-2) 0 0;
+  padding:0 var(--qa-s-4);
+  background:var(--qa-surface-2);
+  border-radius:var(--qa-r-full);
+}
+.qa-topbar-search input{
+  flex:1;
+  min-width:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:var(--qa-text);
+  font-size:16px;
+  height:100%;
+}
+.qa-topbar-search input::placeholder{color:var(--qa-text-3);}
+.qa-topbar-search svg{color:var(--qa-text-3);}
+.qa-topbar-search:focus-within{box-shadow:inset 0 0 0 2px var(--qa-primary);}
+/* the browser's own "x" in a search field is blue and tiny; draw the app's (touch size, theme colour) */
+.qa-topbar-search input::-webkit-search-cancel-button{
+  -webkit-appearance:none;appearance:none;
+  width:28px;height:28px;margin:0 -6px 0 var(--qa-s-2);cursor:pointer;
+  background:var(--qa-text-3);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E") center/18px 18px no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E") center/18px 18px no-repeat;
+}
+
+/* ---------- 6. Bottom navigation (phones) / rail (tablets) ---------- */
+.qa-nav{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:var(--qa-z-nav);
+  display:flex;
+  align-items:stretch;
+  justify-content:space-around;
+  height:calc(var(--qa-nav-h) + var(--qa-safe-bottom));
+  padding:0 var(--qa-safe-right) var(--qa-safe-bottom) var(--qa-safe-left);
+  background:var(--qa-surface);
+  border-top:1px solid var(--qa-outline);
+}
+.qa-nav-item{
+  flex:1 1 0;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  padding:6px 2px 4px;
+  border:0;
+  background:transparent;
+  color:var(--qa-text-3);
+  font-size:11.5px;
+  font-weight:500;
+  line-height:1.2;
+  cursor:pointer;
+}
+.qa-nav-pill{
+  width:56px;height:30px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--qa-r-full);
+  transition:background-color var(--qa-dur-2) var(--qa-ease);
+}
+.qa-nav-item svg{width:24px;height:24px;fill:currentColor;}
+.qa-nav-item .qa-nav-label{
+  max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.qa-nav-item.qa-active{color:var(--qa-text);font-weight:700;}
+.qa-nav-item.qa-active .qa-nav-pill{background:var(--qa-primary-container);color:var(--qa-on-primary-container);}
+.qa-nav-item:active .qa-nav-pill{background:var(--qa-surface-3);}
+
+html.qa-nav-hidden .qa-nav,
+html.qa-kbd-open .qa-nav,
+html.qa-kbd-open #playerBar{display:none !important;}
+
+/* Tablets / landscape: navigation rail on the leading edge. */
+@media (min-width:840px){
+  .qa-nav{
+    top:var(--header-h);
+    bottom:0;left:0;right:auto;
+    width:calc(var(--qa-rail-w) + var(--qa-safe-left));
+    height:auto;
+    flex-direction:column;
+    justify-content:flex-start;
+    gap:var(--qa-s-2);
+    padding:var(--qa-s-3) 0 var(--qa-safe-bottom) var(--qa-safe-left);
+    border-top:0;
+    border-right:1px solid var(--qa-outline);
+  }
+  .qa-nav-item{flex:0 0 auto;padding:6px 0;}
+  html:not(.qa-nav-hidden) .qa-topbar,
+  html:not(.qa-nav-hidden) .qa-screen,
+  html:not(.qa-nav-hidden) .app-shell{margin-left:auto;}
+  html:not(.qa-nav-hidden) body{padding-left:calc(var(--qa-rail-w) + var(--qa-safe-left));}
+  html:not(.qa-nav-hidden) .qa-topbar{left:calc(var(--qa-rail-w) + var(--qa-safe-left));}
+  html:not(.qa-nav-hidden) #playerBar{left:calc(var(--qa-rail-w) + var(--qa-safe-left)) !important;}
+}
+
+/* ---------- 7. Snackbar ---------- */
+.qa-snack{
+  position:fixed;
+  left:50%;
+  bottom:calc(max(var(--qa-bottom-reserve,0px),var(--qa-safe-bottom)) + var(--qa-s-4));
+  transform:translate(-50%,16px);
+  z-index:var(--qa-z-snack);
+  display:flex;
+  align-items:center;
+  gap:var(--qa-s-3);
+  max-width:min(92vw,520px);
+  min-height:48px;
+  padding:var(--qa-s-3) var(--qa-s-4);
+  border-radius:var(--qa-r-sm);
+  background:var(--qa-text);
+  color:var(--qa-bg);
+  font-size:14px;
+  line-height:1.4;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--qa-dur-2) var(--qa-ease), transform var(--qa-dur-2) var(--qa-ease);
+}
+.qa-snack.qa-visible{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+.qa-snack-action{
+  flex:0 0 auto;
+  border:0;background:transparent;
+  color:var(--qa-primary-container);
+  font-weight:700;font-size:14px;
+  padding:var(--qa-s-1) var(--qa-s-2);
+  cursor:pointer;
+}
+html[data-qa-scheme="light"] .qa-snack-action{color:var(--qa-accent-strong);}
+/* The website's own toast helper (showToast) is routed to the snackbar by the
+   app layer; this hides the original element if anything still creates it. */
+html[data-platform="android-app"] #appToast{display:none !important;}
+
+/* ---------- 8. Utility ---------- */
+.qa-hidden{display:none !important;}
+.qa-sr-only{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+.qa-grow{flex:1 1 auto;min-width:0;}
+.qa-row{display:flex;align-items:center;gap:var(--qa-s-3);}
+.qa-stack{display:flex;flex-direction:column;gap:var(--qa-s-3);}

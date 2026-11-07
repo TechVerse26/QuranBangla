@@ -1,0 +1,325 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // এডমিন কিনা চেক করার হেল্পার ফাংশন — শুধু ডকুমেন্ট থাকলেই না, তার ভেতরে
+    // isAdmin: true ফিল্ডও সত্যি হতে হবে। এতে করে admins/{uid} ডকুমেন্টে ভুলবশত
+    // অন্য কোনো ফিল্ড (যেমন খালি ডক বা isAdmin:false) থাকলে সেটা আর এডমিন
+    // হিসেবে গণ্য হবে না — শুধু ডক "exists" করাটা যথেষ্ট শর্ত নয়।
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false; // Firebase Console থেকে ম্যানুয়ালি { isAdmin: true } দিয়ে যোগ/বাদ দিতে হবে
+    }
+
+    // ------------------------------------------------------------------
+    // এক্সামের লিংক (admin.html থেকে যোগ/এডিট/মুছে ফেলা হয়, index.html-এ
+    // "পরীক্ষা" ট্যাবে সবাই রিয়েল-টাইমে দেখে — js/exam.js)।
+    //
+    // সবাই পড়তে পারবে, কিন্তু লেখা (যোগ/পরিবর্তন/মোছা) শুধু isAdmin()
+    // সত্যি হলেই সম্ভব — এবং শুধু isAdmin() যথেষ্ট না, নিচের প্রতিটি শর্তও
+    // (কোন ফিল্ড থাকতে পারবে, কোনটার টাইপ কী, লিংক http(s):// দিয়ে শুরু কিনা,
+    // দৈর্ঘ্যের সীমা) একসাথে সত্যি হতে হবে — যাতে কোনো ভুল বা দূষিত (malformed)
+    // ডেটা কখনোই Firestore-এ ঢুকতে না পারে, এমনকি এডমিন অ্যাকাউন্ট থেকেও না।
+    // ------------------------------------------------------------------
+    match /exams/{examId} {
+      allow read: if true;
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['title','description','link','durationMinutes','questionCount','publishAt','createdAt','createdBy','updatedAt'])
+        && request.resource.data.keys().hasAll(['title','link','createdAt'])
+        // title: বাধ্যতামূলক, ফাঁকা না, যুক্তিসঙ্গত দৈর্ঘ্যের মধ্যে
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        // description: ঐচ্ছিক, দিলে অবশ্যই string ও যুক্তিসঙ্গত দৈর্ঘ্যের
+        && (!('description' in request.resource.data)
+            || (request.resource.data.description is string && request.resource.data.description.size() <= 1000))
+        // link: বাধ্যতামূলক, শুধু http(s):// দিয়ে শুরু হতে পারবে —
+        // javascript:/data: এর মতো স্কিম ব্লক করে, যাতে ক্লিক করলেই কারো
+        // ব্রাউজারে স্ক্রিপ্ট চলে যাওয়ার সুযোগ না থাকে
+        && request.resource.data.link is string
+        && request.resource.data.link.size() <= 2048
+        && request.resource.data.link.matches('^https?://.+')
+        // durationMinutes/questionCount: ঐচ্ছিক, দিলে অবশ্যই পূর্ণসংখ্যা ও ১-৯৯৯ এর মধ্যে
+        && (!('durationMinutes' in request.resource.data)
+            || (request.resource.data.durationMinutes is int
+                && request.resource.data.durationMinutes > 0 && request.resource.data.durationMinutes <= 999))
+        && (!('questionCount' in request.resource.data)
+            || (request.resource.data.questionCount is int
+                && request.resource.data.questionCount > 0 && request.resource.data.questionCount <= 999))
+        // publishAt: ঐচ্ছিক — এই সময়ের আগে ইউজার সেকশনে শুধু কাউন্টডাউন দেখা যাবে
+        // (link ক্লিকযোগ্য হবে না), সময় পার হলে js/exam.js অটো আনলক করে দেয়।
+        // দিলে অবশ্যই একটি টাইমস্ট্যাম্প হতে হবে।
+        && (!('publishAt' in request.resource.data) || request.resource.data.publishAt is timestamp)
+        // createdAt/createdBy: সার্ভার টাইমস্ট্যাম্প ও নিজের uid ছাড়া বসানো যাবে না
+        && request.resource.data.createdAt == request.time
+        && (!('createdBy' in request.resource.data) || request.resource.data.createdBy == request.auth.uid)
+        && !('updatedAt' in request.resource.data);
+
+      allow update: if isAdmin()
+        // createdAt/createdBy কখনো পরিবর্তন করা যাবে না — বাকিগুলোই বদলানো যাবে
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['title','description','link','durationMinutes','questionCount','publishAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['title','description','link','durationMinutes','questionCount','publishAt','createdAt','createdBy','updatedAt'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && (!('description' in request.resource.data)
+            || (request.resource.data.description is string && request.resource.data.description.size() <= 1000))
+        && request.resource.data.link is string
+        && request.resource.data.link.size() <= 2048
+        && request.resource.data.link.matches('^https?://.+')
+        && (!('durationMinutes' in request.resource.data)
+            || (request.resource.data.durationMinutes is int
+                && request.resource.data.durationMinutes > 0 && request.resource.data.durationMinutes <= 999))
+        && (!('questionCount' in request.resource.data)
+            || (request.resource.data.questionCount is int
+                && request.resource.data.questionCount > 0 && request.resource.data.questionCount <= 999))
+        && (!('publishAt' in request.resource.data) || request.resource.data.publishAt is timestamp)
+        && ('updatedAt' in request.resource.data) && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // এডমিন-কিউরেটেড শেয়ার্ড মিউজিক/নাশিদ লাইব্রেরি (admin.js "মিউজিক" ট্যাব
+    // থেকে যোগ/মোছা হয়, স্ট্যাটাস কম্পোজারের মিউজিক-পিকারে সবাই দেখে ও
+    // ব্যবহার করে — js/status-voice.js)। এক্সামের মতোই: সবাই পড়তে পারবে,
+    // লেখা শুধু isAdmin()। প্রতিটি ক্লিপ আগে থেকেই ১৫ সেকেন্ডে ট্রিম ও
+    // কম্প্রেস করা থাকে (স্ট্যাটাসে যেভাবে সরাসরি ব্যবহার হবে), তাই
+    // audioData ছোটই থাকে — 150000 বাইট cap তারপরও নিরাপত্তার জন্য।
+    // ------------------------------------------------------------------
+    match /sharedMusic/{trackId} {
+      allow read: if true;
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['title','audioData','duration','peaks','createdAt','createdBy','updatedAt'])
+        && request.resource.data.keys().hasAll(['title','audioData','duration','peaks','createdAt'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.audioData is string
+        && request.resource.data.audioData.size() > 0
+        && request.resource.data.audioData.size() <= 150000
+        && request.resource.data.duration is int
+        && request.resource.data.duration > 0
+        && request.resource.data.duration <= 16000
+        && request.resource.data.peaks is list
+        && request.resource.data.peaks.size() <= 60
+        && request.resource.data.createdAt == request.time
+        && (!('createdBy' in request.resource.data) || request.resource.data.createdBy == request.auth.uid)
+        && !('updatedAt' in request.resource.data);
+
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','audioData','duration','peaks','updatedAt'])
+        && request.resource.data.keys().hasOnly(['title','audioData','duration','peaks','createdAt','createdBy','updatedAt'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.audioData is string
+        && request.resource.data.audioData.size() > 0
+        && request.resource.data.audioData.size() <= 150000
+        && request.resource.data.duration is int
+        && request.resource.data.duration > 0
+        && request.resource.data.duration <= 16000
+        && request.resource.data.peaks is list
+        && request.resource.data.peaks.size() <= 60
+        && ('updatedAt' in request.resource.data) && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isAdmin();
+    }
+
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, delete: if isAdmin(); // এডমিন প্যানেল থেকে দেখা/মুছার জন্য
+
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'statusReason', 'statusUpdatedAt', 'customThemeGranted', 'name', 'position', 'bio']);
+
+      match /sessions/{sessionId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+        allow read, delete: if isAdmin();
+      }
+
+      // টু-ফ্যাক্টর অথেনটিকেশনে "৩০ দিন এই ডিভাইসকে মনে রাখুন" — কোন ডিভাইস
+      // বিশ্বস্ত তার রেকর্ড, যাতে প্রোফাইল থেকে যেকোনো ডিভাইসের বিশ্বস্ততা
+      // দূর থেকে বাতিল করা যায় (js/mfa.js)।
+      match /trustedDevices/{deviceId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      // "হাইলাইটস" (js/status-highlights.js) — নিজের যেকোনো স্ট্যাটাস আইটেম
+      // (টেক্সট/ছবি/ভয়েস, ব্যাকগ্রাউন্ড মিউজিক-সহ) স্থায়ীভাবে সংরক্ষণ করে
+      // রাখা যায়, মূল ২৪-ঘণ্টার স্ট্যাটাস মুছে গেলেও এটা থেকে যায়। আপাতত
+      // সম্পূর্ণ ব্যক্তিগত — শুধু মালিকই পড়তে/লিখতে পারবে (statuses
+      // কালেকশনের মতো সবাইকে read দেওয়া হয়নি); ভবিষ্যতে প্রোফাইলে পাবলিক
+      // করতে চাইলে allow read-এ statuses-এর মতো request.auth != null করে
+      // দিলেই হবে।
+      match /highlights/{highlightId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow create: if request.auth != null && request.auth.uid == uid
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['uid','name','avatarColor','avatarIcon','type','text','bg','font','align','size','textColor','highlight','imageData','audioData','audioDuration','audioPeaks','audioName','album','savedAt','sourceStatusId'])
+          && request.resource.data.keys().hasAll(['uid','type','album','savedAt'])
+          && request.resource.data.type in ['text','image','voice']
+          && request.resource.data.album is string && request.resource.data.album.size() <= 60
+          && request.resource.data.savedAt is number
+          && (!('text' in request.resource.data) || (request.resource.data.text is string && request.resource.data.text.size() <= 700))
+          && (!('imageData' in request.resource.data) || (request.resource.data.imageData is string && request.resource.data.imageData.size() <= 900000))
+          && (!('audioData' in request.resource.data) || (request.resource.data.audioData is string && request.resource.data.audioData.size() <= 750000))
+          && (!('audioDuration' in request.resource.data) || (request.resource.data.audioDuration is number && request.resource.data.audioDuration > 0 && request.resource.data.audioDuration <= 60000))
+          && (!('audioPeaks' in request.resource.data) || (request.resource.data.audioPeaks is list && request.resource.data.audioPeaks.size() <= 60))
+          && (!('audioName' in request.resource.data) || (request.resource.data.audioName is string && request.resource.data.audioName.size() <= 120))
+          && (!('sourceStatusId' in request.resource.data) || request.resource.data.sourceStatusId is string);
+        allow update: if false; // write-once — বদলাতে হলে মুছে আবার সেভ করতে হবে
+        allow delete: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    match /push_subscriptions/{deviceId} {
+      // প্রার্থনার নোটিফিকেশন লগইন ছাড়াই কাজ করে বলে create/update-এ কোনো
+      // request.auth শর্ত নেই — শুধু ফিল্ডের শেপ/টাইপ যাচাই করা হয়। delete-ও
+      // একই মডেলে খোলা রাখা হলো (js/push.js:disablePrayerPush() নোটিফিকেশন
+      // বন্ধ করার সময় নিজের deviceId-এর ডক ডিলিট করার চেষ্টা করে — আগে এখানে
+      // delete: if false ছিল বলে সেটা সবসময় নিঃশব্দে ব্যর্থ হতো এবং টগল অফ
+      // করলেও সাবস্ক্রিপশন Firestore-এ থেকে যেত)।
+      // create ও update আলাদা করা হলো কেন: scripts/send-prayer-notifications.js
+      // (Admin SDK দিয়ে চলে, rules বাইপাস করে) প্রতিবার নোটিফিকেশন পাঠানোর
+      // পর lastNotifiedDate/lastNotifiedPrayers ফিল্ড merge করে ডকুমেন্টে
+      // যোগ করে দেয়। update-এ যদি পুরো resulting ডকুমেন্টের keys().hasOnly()
+      // চেক করা হতো (আগে যেমন ছিল), তাহলে সেই দুটো এক্সট্রা ফিল্ড ডকুমেন্টে
+      // চলে আসার পর ইউজার লোকেশন/মেথড বদলালে (menu.js → updatePushLocationIfSubscribed
+      // → savePushSubscription-এর merge:true write) client-এর নিজের আপডেটই
+      // hasOnly()-তে ফেইল করে reject হয়ে যেত — নোটিফিকেশন পাঠানো শুরু হওয়ার
+      // পর থেকে লোকেশন/মেথড আপডেট নিঃশব্দে আর সেভ হতো না। এখন exams
+      // collection-এর মতোই diff().affectedKeys() দিয়ে শুধু client যা
+      // পরিবর্তন করছে সেটুকুই চেক করা হয়, সার্ভারের যোগ করা ফিল্ড উপেক্ষা
+      // করে।
+      allow read: if false;
+
+      allow create: if request.resource.data.keys().hasOnly(['token','lat','lon','method','updatedAt'])
+        && request.resource.data.token is string
+        && request.resource.data.lat is number && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
+        && request.resource.data.lon is number && request.resource.data.lon >= -180 && request.resource.data.lon <= 180;
+
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['token','lat','lon','method','updatedAt'])
+        && request.resource.data.token is string
+        && request.resource.data.lat is number && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
+        && request.resource.data.lon is number && request.resource.data.lon >= -180 && request.resource.data.lon <= 180;
+
+      allow delete: if true;
+    }
+
+    // ------------------------------------------------------------------
+    // WhatsApp-স্টাইল "স্ট্যাটাস" ফিচার (js/status.js) — টেক্সট/ছবি/ভয়েস
+    // স্ট্যাটাস (একাধিক স্লাইড একসাথে পোস্ট করা যায়, প্রতিটা এখানে আলাদা
+    // ডকুমেন্ট), টেক্সট/ছবি স্ট্যাটাসে ঐচ্ছিক ব্যাকগ্রাউন্ড মিউজিক
+    // (js/status-voice.js — ≤১৫ সেকেন্ড), ২৪ ঘণ্টা মেয়াদ (expiresAt দিয়ে
+    // client-side ফিল্টার হয়, তাই মেয়াদ শেষ হলে আলাদা করে ডিলিট না করেও
+    // সেটা আর কারো ফিডে দেখায় না), "কারা দেখেছে" ও "লাভ রিয়েক্ট"
+    // সাব-কালেকশন। দেখার জন্য সাইন-ইন বাধ্যতামূলক। পোস্ট করা এখন শুধু
+    // সার্ভার (POST /api/story-submit → AI মডারেশন → Admin SDK) দিয়ে হয় —
+    // নিচের `allow create: if false` দেখুন। update (ভিউ/রিয়েক্ট কাউন্টার)
+    // স্কিমা আগের মতোই backward-compatible: reactCount optional, তাই
+    // পুরোনো ডকুমেন্টেও রিয়েক্ট চলে।
+    // ------------------------------------------------------------------
+    match /statuses/{statusId} {
+      allow read: if request.auth != null;
+
+      // ── স্টোরি মডারেশন (AI + অ্যাডমিন, সম্পূর্ণ সার্ভার-সাইড) ─────────────────
+      // ব্রাউজার থেকে আর কেউ সরাসরি `statuses`-এ ডকুমেন্ট বানাতে পারবে না।
+      // ওয়েবসাইটের প্রতিটা স্টোরি POST /api/story-submit-এ যায়; সেখানে
+      // ভ্যালিডেশন → Gemini মডারেশন → (প্রয়োজনে) অ্যাডমিন রিভিউ হয়, আর শুধু
+      // APPROVED স্টোরি Firebase Admin SDK (সার্ভিস অ্যাকাউন্ট — যেটা এই
+      // রুলসের আওতার বাইরে) দিয়ে এখানে প্রকাশ হয়। ফলে কেউ নিজের স্টোরিকে
+      // approved/published বলে মার্ক করতে বা AI চেক এড়িয়ে সরাসরি এই কালেকশনে
+      // লিখতে পারে না। (আগের create-রুলে যে ফিল্ড-তালিকা ছিল, সেটা এখন
+      // api/_story-policy.js → sanitizeStory()/buildPublishedStatus()-এ আছে।)
+      allow create: if false;
+
+      // (মডারেশন ফিল্ড — moderationStatus, moderatedAt, publishedAt, submissionId … —
+      // এই রুলে কখনোই বদলানো যায় না: affectedKeys শুধু viewCount/reactCount।)
+      // মালিক নিজে যেকোনো ফিল্ড বদলাতে পারবে না — শুধু viewCount ঠিক এক
+      // করে বাড়ানো (যেকোনো সাইন-ইন করা ভিউয়ার নিজের ভিউ রেকর্ড করার সময়)
+      // এবং reactCount ঠিক এক করে বাড়ানো/কমানো (রিয়েক্ট/আন-রিয়েক্ট টগল করার
+      // সময়) — এই দুটোর যেকোনো একটা বা দুটোই একসাথে, একই আপডেটে চলবে।
+      // resource.data-এ reactCount না থাকলে (পুরোনো ডকুমেন্ট) সেটাকে ০ ধরে
+      // হিসাব করা হয়, যাতে রোলআউটের মাঝামাঝি সময়ের স্ট্যাটাসেও রিয়েক্ট
+      // করা যায়।
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount','reactCount'])
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['viewCount'])
+            || request.resource.data.viewCount == resource.data.viewCount + 1)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['reactCount'])
+            || request.resource.data.reactCount == (('reactCount' in resource.data) ? resource.data.reactCount : 0) + 1
+            || request.resource.data.reactCount == (('reactCount' in resource.data) ? resource.data.reactCount : 0) - 1);
+
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+
+      match /views/{viewerUid} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.auth.uid == viewerUid
+          && request.resource.data.keys().hasOnly(['name','avatarColor','avatarIcon','viewedAt'])
+          && request.resource.data.name is string && request.resource.data.name.size() <= 120
+          && request.resource.data.viewedAt is number;
+        allow update: if false;
+        allow delete: if request.auth != null
+          && get(/databases/$(database)/documents/statuses/$(statusId)).data.uid == request.auth.uid;
+      }
+
+      // লাভ রিয়েক্ট — যে কেউ নিজের uid-এর ডকুমেন্ট বসিয়ে/মুছে রিয়েক্ট
+      // টগল করতে পারে; স্ট্যাটাসের মালিকও মুছতে পারে (নিজের পুরো স্ট্যাটাস
+      // ডিলিট করার সময় ব্যাচে সব রিয়েক্ট সাফ করার জন্য, views সাবকালেকশনের
+      // মতোই)।
+      match /reactions/{reactorUid} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.auth.uid == reactorUid
+          && request.resource.data.keys().hasOnly(['name','avatarColor','avatarIcon','reactedAt','type'])
+          && request.resource.data.keys().hasAll(['name','reactedAt','type'])
+          && request.resource.data.name is string && request.resource.data.name.size() <= 120
+          && request.resource.data.type == 'love'
+          && request.resource.data.reactedAt is number;
+        allow update: if false;
+        allow delete: if request.auth != null
+          && (request.auth.uid == reactorUid
+              || get(/databases/$(database)/documents/statuses/$(statusId)).data.uid == request.auth.uid);
+      }
+    }
+
+    // ── স্টোরি মডারেশনের ব্যাক-এন্ড (শুধু সার্ভার) ────────────────────────────
+    // এই কালেকশনগুলো যেকোনো ব্রাউজার ক্লায়েন্টের জন্য বন্ধ — অ্যাডমিন
+    // অ্যাকাউন্টের জন্যও। অ্যাডমিন প্যানেল এগুলো শুধু POST /api/story-admin
+    // দিয়ে পড়ে/বদলায়; সেখানে প্রতিটা কলে Firebase টোকেন + admins/{uid}
+    // যাচাই হয়। তাই মডারেশন রেকর্ড/ইতিহাস ক্লায়েন্ট থেকে পড়া, বদলানো বা মুছে
+    // ফেলা অসম্ভব (Admin SDK রুল এড়িয়ে চলে, ক্লায়েন্ট পারে না)।
+    //   story_submissions  — প্রতিটা সাবমিশন + AI সিদ্ধান্ত + কারণ
+    //   story_moderation_log — append-only অডিট ট্রেইল
+    //   story_user_state   — রেট-লিমিট, কুলডাউন, বারবার লঙ্ঘনের হিসাব
+    //   story_ai_cache     — একই কনটেন্টে বারবার AI কল এড়াতে ক্যাশ
+    //   story_stats        — ড্যাশবোর্ডের দৈনিক কাউন্টার
+    match /story_submissions/{id} { allow read, write: if false; }
+    match /story_moderation_log/{id} { allow read, write: if false; }
+    match /story_user_state/{uid} { allow read, write: if false; }
+    match /story_ai_cache/{id} { allow read, write: if false; }
+    match /story_stats/{id} { allow read, write: if false; }
+
+    match /siteConfig/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /system_errors/{errorId} {
+      allow create: if request.resource.data.keys().hasOnly(['message','stack','severity','page','userAgent','uid','resolved','timestamp'])
+        && request.resource.data.resolved == false;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}
