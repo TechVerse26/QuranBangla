@@ -34,7 +34,7 @@ Android প্রজেক্ট কখনো repo-তে কমিট করা
 | 1 | **`app-config.js`-এ `supportEmail` ও `developerName` বসান** | Google Play-র গোপনীয়তা নীতিতে ডেভেলপারের নাম ও যোগাযোগের ঠিকানা লাগে। ফাঁকা থাকলে নীতি-পাতায় কোনো ইমেইল দেখায় না। **আমি নিজে থেকে কোনো ইমেইল বসাইনি** — সবার সামনে যে ঠিকানা দেখাতে চান সেটাই দিন। | `app-config.js` (§৩) |
 | 2 | Firebase-এ Android অ্যাপ নিবন্ধন → `GOOGLE_SERVICES_JSON` secret | নামাজের পুশ নোটিফিকেশনের জন্য। না দিলে বিল্ড সফল হয়, কিন্তু অ্যাপে ওয়াক্তের নোটিফিকেশন চালু করা যায় না। | §৪.১ |
 | 3 | Release keystore তৈরি → ৪টি secret | Google Play-র জন্য signed APK/AAB। শুধু debug APK টেস্ট করলে লাগবে না। | §৪.২ |
-| 4 | (ঐচ্ছিক) `ANDROID_DEBUG_KEYSTORE_BASE64` | debug APK একটার ওপর আরেকটা ইনস্টল করতে (আনইনস্টল ছাড়া)। | §৪.৩ |
+| 4 | (দরকার নেই) `ANDROID_DEBUG_KEYSTORE_BASE64` | স্থায়ী debug কী ইতিমধ্যে repo-তে আছে (`android-build/debug.keystore`), তাই debug APK একটার ওপর আরেকটা আনইনস্টল ছাড়াই ইনস্টল হয়। নিজের কী দিতে চাইলেই শুধু এই secret। | §৪.৩ |
 | 5 | (ঐচ্ছিক) `siteConfig/announcement`, `siteConfig/appConfig` ডকুমেন্ট | অ্যাপে ঘোষণা ও "নতুন সংস্করণ" নোটিশ দেখাতে। | §৯ |
 | 6 | (ঐচ্ছিক) `.well-known/assetlinks.json` | ওয়েবসাইটের লিংক (যেমন `…/?surah=18&ayah=10`) অ্যাপে খুলতে। | §৭ |
 | 7 | Play Console ফর্ম: Data safety, গোপনীয়তা নীতির URL, অ্যাকাউন্ট মোছার URL | Google Play-তে প্রকাশের জন্য। | §১০ |
@@ -72,10 +72,10 @@ Debug বিল্ডের জন্য কোনো secret ছাড়াই 
 | `ANDROID_KEYSTORE_PASSWORD` | release বিল্ড | keystore-এর পাসওয়ার্ড |
 | `ANDROID_KEY_ALIAS` | release বিল্ড | কী-এর alias (নিচের উদাহরণে `quranbangla`) |
 | `ANDROID_KEY_PASSWORD` | release বিল্ড | কী-এর পাসওয়ার্ড |
-| `ANDROID_DEBUG_KEYSTORE_BASE64` | ঐচ্ছিক | স্থায়ী debug কী-এর base64 |
+| `ANDROID_DEBUG_KEYSTORE_BASE64` | ঐচ্ছিক (সাধারণত দরকার নেই) | নিজের স্থায়ী debug কী-এর base64 — দিলে repo-র `android-build/debug.keystore`-এর ওপরে প্রাধান্য পায় |
 
 > secret-এর মান কখনো লগে ছাপা হয় না, কোনো ফাইলে লেখা হয় না (শুধু রানারের অস্থায়ী ফোল্ডারে keystore থাকে এবং রান শেষে মুছে ফেলা হয়)।
-> `google-services.json` বা keystore **কখনোই repo-তে কমিট করবেন না**।
+> `google-services.json` ও **release** keystore **কখনোই repo-তে কমিট করবেন না**। (ব্যতিক্রম: `android-build/debug.keystore` — এটা গোপন কিছু নয়, শুধু টেস্ট debug APK-র জন্য, ইচ্ছে করেই repo-তে আছে; §৪.৩ দেখুন।)
 
 ### ৪.১ `GOOGLE_SERVICES_JSON` (পুশ নোটিফিকেশন)
 
@@ -122,18 +122,16 @@ base64 -i quranbangla-release.jks | tr -d '\n' > keystore.base64.txt
 
 workflow রান করার আগে `keytool -list` দিয়ে পাসওয়ার্ড/alias মেলে কি না যাচাই করে — ভুল হলে পরিষ্কার বার্তা দিয়ে থামে।
 
-### ৪.৩ স্থায়ী debug কী (ঐচ্ছিক)
+### ৪.৩ স্থায়ী debug কী (`android-build/debug.keystore`)
 
-ডিফল্টে প্রতিটি রানে নতুন debug কী তৈরি হয়, তাই নতুন debug APK ইনস্টলের আগে পুরোনো debug অ্যাপ **আনইনস্টল** করতে হয়।
-আনইনস্টল এড়াতে একবার একটি স্থায়ী debug কী বানিয়ে secret-এ রাখুন:
+Android একটা APK শুধু তখনই আগে ইনস্টল করা অ্যাপের ওপর বসায় যখন দুটোই **একই কী** দিয়ে সাইন করা। কী আলাদা হলে ইনস্টলার বলে:
+*"App not installed as package conflicts with an existing package"*।
+CI রানার প্রতি রানে নতুন, এলোমেলো কী বানায় — তাই এই সমস্যা এড়াতে repo-তে একটি **স্থায়ী debug কী** রাখা আছে: `android-build/debug.keystore` (store পাসওয়ার্ড `android`, alias `androiddebugkey`)। workflow প্রতিটি debug বিল্ডে এটাই ব্যবহার করে।
 
-```bash
-keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android \
-  -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-base64 -w0 debug.keystore      # → ANDROID_DEBUG_KEYSTORE_BASE64
-```
-
-(পাসওয়ার্ড `android` ও alias `androiddebugkey` রাখতে হবে — Android Gradle প্লাগইন ঠিক এগুলোই খোঁজে। debug কী গোপন কিছু নয়, কিন্তু release-এ কখনো ব্যবহার করবেন না।)
+- ফাইলটি **কখনো মুছবেন না, বদলাবেন না**। বদলালে সব ফোনে আবার একবার আনইনস্টল করতে হবে। একটা কপি নিরাপদ জায়গায় রাখুন।
+- Debug কী গোপন কিছু নয় (পাসওয়ার্ড সবার জানা `android`), তাই এটা শুধু টেস্ট APK-র জন্য। Google Play / release-এ **কখনো ব্যবহার করবেন না** (release-এর আলাদা কী, §৪.২)। debug ও release APK-র কী আলাদা বলে একই ফোনে একটার ওপর আরেকটা ইনস্টল হবে না — আগে আনইনস্টল করতে হবে।
+- ঐচ্ছিক: নিজের কী দিতে চাইলে secret `ANDROID_DEBUG_KEYSTORE_BASE64` — এটা থাকলে repo-র ফাইলের **ওপরে** প্রাধান্য পায়। ইচ্ছে করে না দিয়ে থাকলে secret-টি মুছে ফেলুন, নইলে সে-ই কী ঠিক করবে।
+- প্রতিটি debug Release-এর নোটে এবং রানের Summary-তে **Signing key (SHA-256)** ছাপা হয়। প্রতিবার একই (এই repo-র কী-এর শুরু `B0:88:DB:33…`, শেষ `…DE:62:EF:2E`) হলে নতুন APK আগেরটার ওপর ইনস্টল হবে। আলাদা হলে Summary-তে `Result` কলামে `mismatch` / `random` দেখাবে।
 
 ---
 
@@ -208,7 +206,7 @@ Android-কে যাচাই করাতে (`autoVerify`) ওয়েবস
 | `unresolved resource reference(s): …` | প্যাচ স্ক্রিপ্টের নিজস্ব সুরক্ষা — রিপোর্টে কোন রিসোর্স নেই দেখুন। |
 | Gradle ব্যর্থ | Summary-র "Last lines of the Gradle log" এবং `gradle-debug-full.log` দেখুন। |
 | `Optional plugin … could not be installed` (warning) | ঐচ্ছিক `@capawesome/capacitor-app-update` নামেনি — অ্যাপ তখন Firestore-এর `appConfig` নোটিশ দিয়ে আপডেট জানায়। |
-| নতুন debug APK ইনস্টল হচ্ছে না ("App not installed") | আগের debug অ্যাপ আনইনস্টল করুন, অথবা §৪.৩ অনুযায়ী স্থায়ী debug কী দিন। |
+| নতুন debug APK ইনস্টল হচ্ছে না (`App not installed as package conflicts with an existing package`) | সাইনিং কী মিলছে না। (১) ফোন থেকে পুরোনো Quran Bangla আনইনস্টল করুন — Dual apps / Second space / work profile-এ থাকলে সেখান থেকেও; (২) তারপর নতুন APK ইনস্টল করুন। এটা একবারই লাগে। এরপর প্রতিটি Release-নোটের **Signing key (SHA-256)** একই থাকলে আর লাগবে না (§৪.৩)। কী প্রতিবার আলাদা এলে `android-build/debug.keystore` repo-তে আছে কি না দেখুন। |
 | অ্যাপে নতুন UI-র বদলে পুরোনো ওয়েবসাইট-UI দেখাচ্ছে | (ক) পুরোনো APK (যেটাতে `App` প্লাগইন নেই) — নতুন APK ইনস্টল করুন; (খ) অ্যাপ-UI ১২ সেকেন্ডে চালু না হলে ওই সেশনের জন্য নিজে থেকে ওয়েবসাইট-UI-তে ফিরে যায়। কারণ জানতে ফোন USB-তে দিয়ে Chrome → `chrome://inspect`-এ কনসোলে `[platform] app UI failed to start:` দেখুন। |
 | অফলাইনে প্রথম খোলায় "সংযোগ নেই" পাতা | অ্যাপ লাইভ সাইট লোড করে। একবার সফলভাবে খোলার পর Service Worker ক্যাশ থেকে অফলাইনেও চলে; ডেটা মুছে ফেললে আবার ইন্টারনেট লাগে। |
 
