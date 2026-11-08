@@ -13,7 +13,8 @@ name: Build Android app
 #   ANDROID_KEYSTORE_PASSWORD      keystore password                          |  needed only for
 #   ANDROID_KEY_ALIAS              key alias inside the keystore              |  release builds
 #   ANDROID_KEY_PASSWORD           key password                              /
-#   ANDROID_DEBUG_KEYSTORE_BASE64  optional: your own fixed debug key (not needed - android-build/debug.keystore is used when present)
+#   ANDROID_DEBUG_KEYSTORE_BASE64  optional: your own fixed debug key. NOT needed: android-build/debug.keystore (committed on purpose)
+#                                  is the stable debug key. If this secret exists it OVERRIDES that file - delete it unless you set it on purpose.
 #
 # Where the finished app is: Actions > the run > "Artifacts" (zip) and, easier, the repository's "Releases" page (APK file).
 
@@ -58,8 +59,8 @@ env:
   APP_NAME: Quran Bangla
   APP_ID: com.techverse.quranbangla
   LIVE_URL: https://quranbangla.vercel.app
-  DEFAULT_VERSION_NAME: '1.1.081848'    # shown to users - change it when you publish a new version
-  VERSION_CODE_BASE: '100'         # automatic versionCode = this + run number (always grows, Google Play needs that)
+  DEFAULT_VERSION_NAME: '1.1.081850'    # shown to users - change it when you publish a new version
+  VERSION_CODE_BASE: '101'         # automatic versionCode = this + run number (always grows, Google Play needs that)
   QR_PROJECT_DIR: /tmp/app
 
 jobs:
@@ -146,19 +147,44 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: bash android-build/create-project.sh full
 
-      - name: Debug signing key (optional)
+      # ONE fixed debug key for EVERY debug build. Android installs an APK over an installed app only when both were signed with
+      # the SAME key; otherwise the installer shows "App not installed as package conflicts with an existing package".
+      # A CI runner makes a brand-new random key on every run, so without a fixed key no build can ever update the previous one.
+      # Order: 1) secret ANDROID_DEBUG_KEYSTORE_BASE64 (your own key)  2) android-build/debug.keystore (committed on purpose -
+      # a debug key is public by design, never use it for a release)  3) none -> warning, random key (uninstall before installing).
+      - name: Stable debug signing key
         env:
           DEBUG_KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
         run: |
           mkdir -p ~/.android
+          rm -f ~/.android/debug.keystore
+          key_source=""
           if [ -n "$DEBUG_KEYSTORE_B64" ]; then
-            printf '%s' "$DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
-            echo "Using the debug key from the ANDROID_DEBUG_KEYSTORE_BASE64 secret: new debug APKs can be installed over old ones."
-          elif [ -f android-build/debug.keystore ] && keytool -list -keystore android-build/debug.keystore -storepass android -alias androiddebugkey > /dev/null 2>&1; then
-            cp android-build/debug.keystore ~/.android/debug.keystore
-            echo "Using android-build/debug.keystore: every debug APK has the same signature, so a new debug APK installs over an older one."
+            printf '%s' "$DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore 2> /dev/null || true
+            if keytool -list -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey > /dev/null 2>&1; then
+              key_source="secret ANDROID_DEBUG_KEYSTORE_BASE64"
+            else
+              rm -f ~/.android/debug.keystore
+              echo "::warning::The secret ANDROID_DEBUG_KEYSTORE_BASE64 is not a usable debug keystore (store password must be android, alias androiddebugkey), so it is ignored. Delete the secret or replace it."
+            fi
+          fi
+          if [ -z "$key_source" ] && [ -f android-build/debug.keystore ]; then
+            if keytool -list -keystore android-build/debug.keystore -storepass android -alias androiddebugkey > /dev/null 2>&1; then
+              cp android-build/debug.keystore ~/.android/debug.keystore
+              key_source="android-build/debug.keystore (repository)"
+            else
+              echo "::warning::android-build/debug.keystore cannot be opened with store password android / alias androiddebugkey."
+            fi
+          fi
+          if [ -z "$key_source" ]; then
+            printf '%s\n' "DEBUG_KEY_SOURCE=" "DEBUG_KEY_SHA256=" >> "$GITHUB_ENV"
+            echo "::warning::No usable fixed debug key (android-build/debug.keystore is missing or unreadable and there is no valid ANDROID_DEBUG_KEYSTORE_BASE64 secret). A random key is used for this run, so this APK will NOT install over an older one. Restore android-build/debug.keystore in the repository."
           else
-            echo "::notice::No fixed debug key (secret or android-build/debug.keystore): a new debug key is generated on every run, so uninstall the old debug app before installing a new debug APK."
+            key_fp="$(keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey 2> /dev/null | awk '/SHA256:/ && !done { print $2; done = 1 }' || true)"
+            printf '%s\n' "DEBUG_KEY_SOURCE=$key_source" "DEBUG_KEY_SHA256=$key_fp" >> "$GITHUB_ENV"
+            echo "Debug signing key from: $key_source"
+            echo "Debug signing key SHA-256: $key_fp"
+            echo "Every debug APK is signed with this same key, so a new debug APK installs over the older one."
           fi
 
       - name: Build debug APK
@@ -232,13 +258,56 @@ jobs:
             mode=full; case "$apk" in *SAFE-MODE*) mode=safe ;; esac
             if ! node android-build/audit-apk.mjs --apk "$apk" --app-id "$APP_ID" --version-name "$APP_VERSION" --version-code "$APP_VERSION_CODE" \
               --kind "$kind" --mode "$mode" "${strict[@]}" \
-              --summary "reports/audit-$(basename "$apk").md" --assetlinks "reports/assetlinks-$kind.json" \
+              --summary "reports/audit-$(basename "$apk").md" --json "reports/audit-$(basename "$apk").json" --assetlinks "reports/assetlinks-$kind.json" \
               | tee -a "$GITHUB_STEP_SUMMARY"; then
               if [ "$kind" = release ]; then release_failed=1
               else echo "::warning::The audit of $(basename "$apk") did not finish (advisory only - the APK is still published)."; fi
             fi
           done
           [ "$release_failed" = 0 ] || { echo "::error::The audit of the release APK found a problem (see above) - it is not published to Releases."; exit 1; }
+
+      # Reads the signing certificate of the finished debug APK and compares it with the stable debug key chosen above.
+      # It only reports (a debug APK is still published), but the result is written on the Release page, so you can see at a
+      # glance whether this APK installs over the previous one (same fingerprint) or needs the old app uninstalled first.
+      - name: Check the debug APK is signed with the stable key
+        id: keycheck
+        if: always() && env.DO_DEBUG == 'true' && hashFiles('dist/*-debug*.apk') != ''
+        continue-on-error: true
+        run: |
+          shopt -s nullglob
+          apks=(dist/*-debug*.apk)
+          apk="${apks[0]}"
+          json="reports/audit-$(basename "$apk").json"
+          actual=""
+          if [ -f "$json" ]; then
+            actual="$(node -e 'try { const j = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); process.stdout.write((j.signer && j.signer.sha256) || ""); } catch (e) {}' "$json")"
+          fi
+          expected="${DEBUG_KEY_SHA256:-}"
+          if [ -z "$actual" ]; then status=unknown
+          elif [ -z "$expected" ]; then status=random
+          elif [ "$actual" = "$expected" ]; then status=ok
+          else status=mismatch
+          fi
+          printf '%s\n' "KEY_STATUS=$status" "KEY_SHA256=$actual" >> "$GITHUB_ENV"
+          {
+            echo '### Signing key of the debug APK'
+            echo
+            echo '| | |'
+            echo '|---|---|'
+            echo "| APK signed with (SHA-256) | \`${actual:-unknown}\` |"
+            echo "| Stable debug key (SHA-256) | \`${expected:-none}\` |"
+            echo "| Key source | ${DEBUG_KEY_SOURCE:-none} |"
+            echo "| Result | $status |"
+            echo
+            echo 'Every debug APK of this repository must show the SAME fingerprint: then each new APK installs over the previous one.'
+            echo 'A different fingerprint than the previous build makes Android say "package conflicts with an existing package" - uninstall the old app once.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          case "$status" in
+            ok) echo "The APK is signed with the stable debug key $actual" ;;
+            mismatch) echo "::error::The APK is NOT signed with the stable debug key (APK: $actual, expected: $expected). It will not install over a build signed with the stable key." ;;
+            random) echo "::warning::The APK is signed with a temporary key ($actual): it will not install over an older build." ;;
+            *) echo "::warning::The signing certificate of the APK could not be read, so the stable-key check was skipped." ;;
+          esac
 
       - name: Next steps for App Links (release only)
         if: hashFiles('reports/assetlinks-release.json') != ''
@@ -297,7 +366,14 @@ jobs:
           note="Debug APK for testing - not for Google Play. Version $APP_VERSION ($APP_VERSION_CODE), commit ${GITHUB_SHA::7}."
           case "${apk[0]}" in *SAFE-MODE*) title="$title SAFE MODE"; note="SAFE MODE: reduced build produced because the full build failed. $note" ;; esac
           hint="Install: download the .apk file below on your phone and open it (Android may ask you to allow installing from this source). / ইনস্টল: নিচের .apk ফাইলটি ফোনে ডাউনলোড করে খুলুন (Android চাইলে এই উৎস থেকে ইনস্টলের অনুমতি দিন)।"
-          { cat "$RUNNER_TEMP/release-notes-input.txt"; echo; echo "$note"; echo; echo "$hint"; } > "$RUNNER_TEMP/release-notes.md"
+          case "${KEY_STATUS:-unknown}" in
+            ok) keyline="Signing key (SHA-256): ${KEY_SHA256}. Builds signed with this same key install over each other without uninstalling (builds made before this key was fixed used other keys: uninstall those once). / সাইনিং কী: একই কী-র বিল্ডগুলো একটার ওপর আরেকটা আনইনস্টল ছাড়াই ইনস্টল হয় (এই কী ঠিক হওয়ার আগের বিল্ডের কী আলাদা ছিল — সেগুলো একবার আনইনস্টল করুন)।" ;;
+            mismatch) keyline="WARNING: this APK is NOT signed with the stable debug key (APK key: ${KEY_SHA256}). Uninstall the old Quran Bangla app before installing it. / সতর্কতা: এই APK স্থায়ী debug কী দিয়ে সাইন হয়নি — আগে পুরোনো অ্যাপ আনইনস্টল করুন।" ;;
+            random) keyline="WARNING: this APK is signed with a temporary key (${KEY_SHA256}), because android-build/debug.keystore could not be used. Uninstall the old app first. / সতর্কতা: স্থায়ী debug কী ব্যবহার হয়নি — আগে পুরোনো অ্যাপ আনইনস্টল করুন।" ;;
+            *) keyline="Signing key: could not be read in this run. / সাইনিং কী এই রানে পড়া যায়নি।" ;;
+          esac
+          conflict="If Android says 'App not installed as package conflicts with an existing package': uninstall the old Quran Bangla app (also from Dual apps / Second space / work profile), then install again. This is needed only when the signing key above differs from the previous build. / 'App not installed as package conflicts with an existing package' এলে: পুরোনো Quran Bangla অ্যাপ আনইনস্টল করুন (Dual apps / Second space থেকেও), তারপর আবার ইনস্টল করুন। আগের বিল্ডের সাইনিং কী থেকে ওপরের কী আলাদা হলেই শুধু এটা লাগে।"
+          { cat "$RUNNER_TEMP/release-notes-input.txt"; echo; echo "$note"; echo; echo "$hint"; echo; echo "$keyline"; echo; echo "$conflict"; } > "$RUNNER_TEMP/release-notes.md"
           assets=("${apk[0]}")
           if [ -f dist/SHA256SUMS.txt ]; then assets+=(dist/SHA256SUMS.txt); fi
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
