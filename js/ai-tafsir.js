@@ -757,11 +757,11 @@ async function sendAiTafsirQuestion(){
         try{ IDBKV.set(AIT_GUEST_REMAINING_KEY, '0'); }catch(e){}
         aiTafsirActivateGuestGate(true);
       } else if(data.error === 'rate_limited'){
-        appendAiTafsirBubble('model', 'আজকের জন্য প্রশ্নের সীমা শেষ হয়ে গেছে 🙏 আগামীকাল আবার চেষ্টা করুন।', true);
+        appendAiTafsirBubble('model', 'আজকে আমি আর কথা বলতে পারতেছিনা।', true);
       } else if(data.error === 'not_configured'){
-        appendAiTafsirBubble('model', 'এই ফিচারটি এখনো সেটআপ করা হয়নি। SETUP_AI_TAFSIR.txt ফাইলটি অনুসরণ করুন।', true);
+        appendAiTafsirBubble('model', 'এই ফিচারটি এখনো উপলব্ধ করা হয়নি।', true);
       } else {
-        appendAiTafsirBubble('model', 'দুঃখিত, এখন উত্তর দিতে পারছি না। একটু পর আবার চেষ্টা করুন।', true);
+        appendAiTafsirBubble('model', 'দুঃখিত, আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন।একটু পর আবার চেষ্টা করুন।', true);
       }
       return;
     }
