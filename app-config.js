@@ -12,6 +12,6 @@ window.QR_APP_CONFIG = {
   appName: 'কুরআন বাংলা',
   appNameEn: 'Quran Bangla',
   siteUrl: 'https://quranbangla.vercel.app',
-  supportEmail: '',
-  developerName: ''
+  supportEmail: 'info.qb.apps@gmail.com',
+  developerName: 'Imran Ahmed'
 };
