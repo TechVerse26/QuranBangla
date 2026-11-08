@@ -59,7 +59,7 @@ env:
   APP_NAME: Quran Bangla
   APP_ID: com.techverse.quranbangla
   LIVE_URL: https://quranbangla.vercel.app
-  DEFAULT_VERSION_NAME: '01.59.82.04'    # shown to users - change it when you publish a new version
+  DEFAULT_VERSION_NAME: '01.59.82.05'    # shown to users - change it when you publish a new version
   VERSION_CODE_BASE: '200'         # automatic versionCode = this + run number (always grows, Google Play needs that)
   QR_PROJECT_DIR: /tmp/app
 
