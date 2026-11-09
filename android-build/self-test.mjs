@@ -17,7 +17,8 @@ import zlib from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  parseBadging, classifyPermissions, parseApksigner, parseManifestTree, assetlinksJson, formatFingerprint, isDebugCertificate, renderMarkdown
+  parseBadging, classifyPermissions, parseApksigner, parseManifestTree, assetlinksJson, formatFingerprint, isDebugCertificate, renderMarkdown,
+  readSigningBlockCertificates, signerFromApk
 } from './audit-apk.mjs';
 import {
   checkXml, decodePng, cornerColor, patchManifestText, groovyBlock, ktsBlock, errorPageHtml, placeholderIndexHtml,
@@ -25,6 +26,9 @@ import {
 } from './apply-native-patches.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+// public certificate of android-build/debug.keystore (the stable debug key) - used only to test the APK signing-block reader
+const REPO_KEY_SHA256 = 'B0:88:DB:33:E6:86:13:A4:06:3F:77:3A:2C:81:6B:76:FC:71:51:E2:E9:5F:C8:4F:3D:72:2D:13:DE:62:EF:2E';
+const REPO_KEY_CERT_B64 = 'MIIDFDCCAfygAwIBAgIJAIHmzurXqTxKMA0GCSqGSIb3DQEBCwUAMDcxCzAJBgNVBAYTAlVTMRAwDgYDVQQKEwdBbmRyb2lkMRYwFAYDVQQDEw1BbmRyb2lkIERlYnVnMCAXDTI2MTEwNzE1NTUyM1oYDzIwNTQwMzI1MTU1NTIzWjA3MQswCQYDVQQGEwJVUzEQMA4GA1UEChMHQW5kcm9pZDEWMBQGA1UEAxMNQW5kcm9pZCBEZWJ1ZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMSowL/1VEWsiBfUqfY4vhRUG4FphYb2SQ9YeXiYdu6APAZ1N8u8e4+MwzVd9aXBmHbDrv1fbUWj7q5uDdF0Qpmb6EssB4wyo4SI9MMlnbhFHYb0/MKnFaa6BpmrvtRNCSJArqgnhbtWIJG6YCkjaiwjxyRKzIYqV3PlIalaZ0evR7ejetpNZlTUqFXZ3IHiiD7yFu9w+UZRfgHixlZCxo0uDUK8GDQ+n7eY8KyYM+lvHMLTJJzx5xnqKI6cqbAaxhv6aWcSASkeqIfwBrt89DTwNorRShX1zNHq6Ur9ODSbLfLMSoc6Ez5Ahey8EzByrURjkHQqu9UZgEwceBvNDGUCAwEAAaMhMB8wHQYDVR0OBBYEFLM1E270deIqw5SesT+WkvWG0BopMA0GCSqGSIb3DQEBCwUAA4IBAQANRoy2TcIr7f1ZoAfXuuygOeCIxkJdp6VC2JkBWQ7s4Gvpo2Gdh8YmuNMdeP46Mtcfl0XevlHjLLqQZJpixfa2G0N0URcG/OMbFwSaoFxGaRyE5J6p4UHAyVU2mqMY9/VLN9re1wq0tn6i3Q3BrLu1Xcizx5SLzNnZtCO39lzWC/torugonZgFYjijBw6mKFmKPDCvBuB6FR7eCw3A/y9mVOFHWhNa5dd2sZQFHhC85n6Uhr8MKgVnwmZiltOJDb7mxFGdYi9rmxWqP4mCKm10d/Mssp/7PsbxgF7I91pc+BgdLG+FViYVgrnuvMzO1HfUUxOI7/sD3KNktZ+Hes68';
 const REPO = path.resolve(HERE, '..');
 const SCRIPT = path.join(HERE, 'apply-native-patches.mjs');
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'qr-selftest-'));
@@ -654,6 +658,60 @@ Signer #1 certificate SHA-1 digest: 0123456789abcdef0123456789abcdef01234567
   check('debug certificate detected', isDebugCertificate('C=US, O=Android, CN=Android Debug') && !isDebugCertificate(signer.signers[0].dn));
   check('failed verification detected', parseApksigner('DOES NOT VERIFY\nERROR: JAR_SIG_NO_SIGNATURES').verified === false);
   eq('formatFingerprint', formatFingerprint('ab:cd:ef'), 'AB:CD:EF');
+  // newer build-tools print the SDK range instead of a number: "Signer (minSdkVersion=24, maxSdkVersion=2147483647) certificate ..."
+  const ranged = parseApksigner(`Verifies
+Verified using v3 scheme (APK Signature Scheme v3): true
+Number of signers: 1
+Signer (minSdkVersion=24, maxSdkVersion=2147483647) certificate DN: C=US, O=Android, CN=Android Debug
+Signer (minSdkVersion=24, maxSdkVersion=2147483647) certificate SHA-256 digest: b088db33e68613a4063f773a2c816b76fc7151e2e95fc84f3d722d13de62ef2e
+`);
+  eq('apksigner (SDK-range format) SHA-256', ranged.signers[0] && ranged.signers[0].sha256, REPO_KEY_SHA256);
+  eq('apksigner (SDK-range format) signer count', ranged.signers.length, 1);
+  // signing block reader: a hand-made APK (data + APK Signing Block + central directory + end record) that carries the repo's debug certificate
+  {
+    const u32 = (n) => { const b = Buffer.alloc(4); b.writeUInt32LE(n); return b; };
+    const u64 = (n) => { const b = Buffer.alloc(8); b.writeBigUInt64LE(BigInt(n)); return b; };
+    const lp = (b) => Buffer.concat([u32(b.length), b]);
+    const der = Buffer.from(REPO_KEY_CERT_B64, 'base64');
+    const digests = lp(lp(Buffer.concat([u32(0x103), lp(Buffer.alloc(32, 7))])));
+    const certs = lp(lp(der));
+    const attrs = lp(Buffer.alloc(0));
+    const sigs = lp(lp(Buffer.concat([u32(0x103), lp(Buffer.alloc(256, 9))])));
+    const pub = lp(Buffer.alloc(294, 5));
+    const v2Value = lp(lp(Buffer.concat([lp(Buffer.concat([digests, certs, attrs])), sigs, pub])));
+    const v3Value = lp(lp(Buffer.concat([lp(Buffer.concat([digests, certs, u32(24), u32(0x7fffffff), attrs])), u32(24), u32(0x7fffffff), sigs, pub])));
+    const pair = (id, value) => Buffer.concat([u64(4 + value.length), u32(id), value]);
+    const makeApk = (pairs) => {
+      const prefix = Buffer.concat([Buffer.from('PK\x03\x04'), Buffer.alloc(300, 1)]);
+      let block = Buffer.alloc(0);
+      if (pairs) {
+        const body = Buffer.concat(pairs);
+        block = Buffer.concat([u64(body.length + 24), body, u64(body.length + 24), Buffer.from('APK Sig Block 42', 'latin1')]);
+      }
+      const cdir = Buffer.concat([Buffer.from('PK\x01\x02'), Buffer.alloc(60, 2)]);
+      const eocd = Buffer.alloc(22);
+      eocd.writeUInt32LE(0x06054b50, 0); eocd.writeUInt16LE(1, 8); eocd.writeUInt16LE(1, 10);
+      eocd.writeUInt32LE(cdir.length, 12); eocd.writeUInt32LE(prefix.length + block.length, 16);
+      return Buffer.concat([prefix, block, cdir, eocd]);
+    };
+    const padding = pair(0x42726577, Buffer.alloc(120));     // unknown ids (verity padding) must be skipped
+    const fV2 = path.join(TMP, 'sigblock-v2.apk'), fV3 = path.join(TMP, 'sigblock-v3.apk'), fNone = path.join(TMP, 'unsigned.apk'), fJunk = path.join(TMP, 'junk.apk');
+    fs.writeFileSync(fV2, makeApk([padding, pair(0x7109871a, v2Value)]));
+    fs.writeFileSync(fV3, makeApk([pair(0xf05368c0, v3Value), padding]));
+    fs.writeFileSync(fNone, makeApk(null));
+    fs.writeFileSync(fJunk, Buffer.from('this is not an apk'));
+    const s2 = signerFromApk(fV2), s3 = signerFromApk(fV3);
+    eq('signing block v2: SHA-256 of the certificate', s2 && s2.sha256, REPO_KEY_SHA256);
+    eq('signing block v3: SHA-256 of the certificate', s3 && s3.sha256, REPO_KEY_SHA256);
+    eq('signing block v2: scheme', s2 && s2.source, 'signing block v2');
+    eq('signing block v3: scheme', s3 && s3.source, 'signing block v3');
+    check('signing block: debug certificate detected', !!s2 && isDebugCertificate(s2.dn), s2 && s2.dn);
+    eq('signing block: SHA-1 of the certificate', s2 && s2.sha1, '69:E7:76:E5:5B:99:EA:04:7D:09:F6:47:C7:CF:46:2C:A8:05:E8:EF');
+    eq('unsigned APK has no signer', signerFromApk(fNone), null);
+    eq('junk file has no signer', signerFromApk(fJunk), null);
+    eq('missing file has no signer', signerFromApk(path.join(TMP, 'does-not-exist.apk')), null);
+    eq('signing block: nothing to read in a short buffer', readSigningBlockCertificates(Buffer.alloc(10)).length, 0);
+  }
   const tree = `N: android=http://schemas.android.com/apk/res/android (line=2)
   E: manifest (line=2)
     A: http://schemas.android.com/apk/res/android:versionCode(0x0101021b)=123

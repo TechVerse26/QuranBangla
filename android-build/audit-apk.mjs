@@ -16,6 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 
 export const ALLOWED_PERMISSIONS = [
@@ -81,17 +82,67 @@ export function parseApksigner(text) {
   const t = String(text);
   const out = { verified: /^Verifies/m.test(t) && !/DOES NOT VERIFY/i.test(t), schemes: {}, signers: [] };
   for (const m of t.matchAll(/Verified using v(\d(?:\.\d)?) scheme[^:]*:\s*(true|false)/g)) out.schemes['v' + m[1]] = m[2] === 'true';
-  const re = /Signer #(\d+) certificate (DN|SHA-256 digest|SHA-1 digest):\s*(.+)/g;
+  // classic:  "Signer #1 certificate DN: ..."      newer build-tools:  "Signer (minSdkVersion=24, maxSdkVersion=2147483647) certificate DN: ..."
+  const re = /Signer\s*(#\d+|\([^)\n]*\))\s*certificate (DN|SHA-256 digest|SHA-1 digest):\s*(.+)/g;
+  const byName = new Map();
   let m;
   while ((m = re.exec(t))) {
-    const i = Number(m[1]) - 1;
-    out.signers[i] = out.signers[i] || { dn: '', sha256: '', sha1: '' };
-    if (m[2] === 'DN') out.signers[i].dn = m[3].trim();
-    else if (m[2] === 'SHA-256 digest') out.signers[i].sha256 = formatFingerprint(m[3]);
-    else out.signers[i].sha1 = formatFingerprint(m[3]);
+    if (!byName.has(m[1])) byName.set(m[1], { dn: '', sha256: '', sha1: '' });
+    const sg = byName.get(m[1]);
+    if (m[2] === 'DN') sg.dn = m[3].trim();
+    else if (m[2] === 'SHA-256 digest') sg.sha256 = formatFingerprint(m[3]);
+    else sg.sha1 = formatFingerprint(m[3]);
   }
-  out.signers = out.signers.filter(Boolean);
+  out.signers = [...byName.values()];
   return out;
+}
+// The APK Signing Block (signature schemes v2 / v3 / v3.1) sits right before the ZIP central directory and carries the signer's
+// X.509 certificate. Reading it directly gives the same fingerprint as `apksigner --print-certs`, whatever text format that tool
+// prints, and needs only Node.js. (Checking that the signature is valid stays apksigner's job.)
+const SIG_BLOCK_IDS = { 0x7109871a: 'v2', 0xf05368c0: 'v3', 0x1b93ad61: 'v3.1' };
+export function readSigningBlockCertificates(buf) {
+  const out = [];
+  try {
+    let eocd = -1;
+    for (let i = buf.length - 22; i >= Math.max(0, buf.length - 22 - 65535); i--) {
+      if (buf.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) return out;
+    const cd = buf.readUInt32LE(eocd + 16);                       // start of the central directory = end of the signing block
+    if (cd < 32 || cd > buf.length) return out;
+    if (buf.toString('latin1', cd - 16, cd) !== 'APK Sig Block 42') return out;
+    const size = Number(buf.readBigUInt64LE(cd - 24));
+    const start = cd - size - 8;
+    if (start < 0 || Number(buf.readBigUInt64LE(start)) !== size) return out;
+    let pos = start + 8;
+    const end = cd - 24;
+    while (pos + 12 <= end) {
+      const len = Number(buf.readBigUInt64LE(pos));                // id (4 bytes) + value
+      if (len < 4 || pos + 8 + len > end) break;
+      const scheme = SIG_BLOCK_IDS[buf.readUInt32LE(pos + 8)];
+      if (scheme) {
+        // value = signers[ signer[ signedData[ digests, certificates[ cert, ... ], ... ], ... ], ... ]; every part is uint32-length-prefixed
+        const v = buf.subarray(pos + 12, pos + 8 + len);
+        let o = 8;                                                 // skip the signers length and the first signer's length
+        const sdLen = v.readUInt32LE(o); o += 4;
+        const sd = v.subarray(o, o + sdLen);
+        let p = 4 + sd.readUInt32LE(0) + 4;                        // skip the digests and the certificate sequence's length
+        const certLen = sd.readUInt32LE(p); p += 4;
+        out.push({ scheme, der: Buffer.from(sd.subarray(p, p + certLen)) });
+      }
+      pos += 8 + len;
+    }
+  } catch { /* unreadable block - the caller reports the key as unknown */ }
+  return out;
+}
+export function signerFromApk(file) {
+  try {
+    for (const c of readSigningBlockCertificates(fs.readFileSync(file))) {
+      const x = new crypto.X509Certificate(c.der);
+      return { dn: x.subject.split('\n').join(', '), sha256: formatFingerprint(x.fingerprint256), sha1: formatFingerprint(x.fingerprint), source: 'signing block ' + c.scheme };
+    }
+  } catch { /* not a readable certificate */ }
+  return null;
 }
 export function isDebugCertificate(dn) { return /CN=Android Debug/i.test(dn || ''); }
 // aapt2 dump xmltree output (attribute lines look like  A: http://schemas.android.com/apk/res/android:allowBackup(0x01010280)=false)
@@ -207,16 +258,23 @@ export function audit(opts) {
     if (!result.manifest.autoVerify) add('warn', 'App Link autoVerify is not set');
   } else if (!result.manifest.parsed) add('warn', 'could not read the manifest tree - manifest feature checks skipped');
 
-  const signer = findTool('apksigner');
-  if (signer) {
-    const v = runTool(signer, ['verify', '--verbose', '--print-certs', apk]);
+  const signerTool = findTool('apksigner');
+  let apksignerOut = '';
+  result.signer = null;
+  if (signerTool) {
+    const v = runTool(signerTool, ['verify', '--verbose', '--print-certs', apk]);
+    apksignerOut = v.out;
     const parsed = parseApksigner(v.out);
     if (v.code !== 0 || !parsed.verified) add('error', 'apksigner could not verify the APK signature: ' + v.out.slice(0, 300).replace(/\s+/g, ' '));
-    result.signer = parsed.signers[0] || null;
-    result.debugKey = !!(result.signer && isDebugCertificate(result.signer.dn));
-    if (opts.kind === 'release' && result.debugKey) add('error', 'the release APK is signed with the DEBUG key - the signing secrets were not applied');
-    if (opts.kind === 'release' && !result.signer) add('error', 'the release APK is not signed');
+    result.signer = parsed.signers.find((x) => x.sha256) || null;
   } else add('warn', 'apksigner not found - signature not checked');
+  if (!result.signer) {                                           // apksigner printed no certificate details: read the signing block ourselves
+    result.signer = signerFromApk(apk);
+    if (!result.signer && signerTool) add('warn', 'could not read the signing certificate; apksigner said: ' + apksignerOut.slice(0, 300).replace(/\s+/g, ' '));
+  }
+  result.debugKey = !!(result.signer && isDebugCertificate(result.signer.dn));
+  if (opts.kind === 'release' && result.debugKey) add('error', 'the release APK is signed with the DEBUG key - the signing secrets were not applied');
+  if (opts.kind === 'release' && !result.signer) add('error', 'the release APK is not signed');
 
   if (result.badging.nativeCode.length) {
     const zipalign = findTool('zipalign');
