@@ -144,6 +144,23 @@ export function signerFromApk(file) {
   } catch { /* not a readable certificate */ }
   return null;
 }
+// Diagnostic: what does GRADLE say it signs debug builds with? Printed next to the fingerprint found inside the APK, so that a
+// mismatch can be traced (wrong key file, key not applied, or something else signing afterwards). Never fails the audit.
+export function parseSigningReport(text) {
+  const m = /^Variant: debug\r?\n([\s\S]*?)^-{5,}/m.exec(String(text));
+  if (!m) return null;
+  const pick = (key) => { const x = new RegExp('^' + key + ':[ \\t]*(.+)$', 'm').exec(m[1]); return x ? x[1].trim() : ''; };
+  return { store: pick('Store'), alias: pick('Alias'), sha256: formatFingerprint(pick('SHA-256')), sha1: formatFingerprint(pick('SHA1')) };
+}
+export function gradleSigningReport(projectDir) {
+  try {
+    const dir = path.join(projectDir, 'android');
+    const gradlew = path.join(dir, 'gradlew');
+    if (!fs.existsSync(gradlew)) return null;
+    const r = spawnSync(gradlew, [':app:signingReport'], { cwd: dir, encoding: 'utf8', timeout: 150000, maxBuffer: 16 * 1024 * 1024 });
+    return parseSigningReport(String(r.stdout || '') + '\n' + String(r.stderr || ''));
+  } catch { return null; }
+}
 export function isDebugCertificate(dn) { return /CN=Android Debug/i.test(dn || ''); }
 // aapt2 dump xmltree output (attribute lines look like  A: http://schemas.android.com/apk/res/android:allowBackup(0x01010280)=false)
 export function parseManifestTree(text) {
@@ -210,6 +227,7 @@ export function renderMarkdown(r) {
     L.push(`| Signed by | ${r.signer.dn || '?'}${r.debugKey ? ' (**debug key**)' : ''} |`);
     L.push(`| Certificate SHA-256 | \`${r.signer.sha256}\` |`);
   }
+  if (r.gradleDebugKey && r.gradleDebugKey.sha256) L.push(`| Gradle signs debug builds with | \`${r.gradleDebugKey.sha256}\` (keystore: \`${r.gradleDebugKey.store || '?'}\`) |`);
   L.push('', '**Permissions declared in the final manifest**', '');
   for (const p of r.permissions.allowed) L.push(`- ${p.name}${p.maxSdk ? ' (max SDK ' + p.maxSdk + ')' : ''}`);
   if (!r.permissions.allowed.length) L.push('- (none)');
@@ -273,6 +291,7 @@ export function audit(opts) {
     if (!result.signer && signerTool) add('warn', 'could not read the signing certificate; apksigner said: ' + apksignerOut.slice(0, 300).replace(/\s+/g, ' '));
   }
   result.debugKey = !!(result.signer && isDebugCertificate(result.signer.dn));
+  if (opts.kind !== 'release' && process.env.QR_AUDIT_GRADLE !== '0') result.gradleDebugKey = gradleSigningReport(process.env.QR_PROJECT_DIR || '/tmp/app');
   if (opts.kind === 'release' && result.debugKey) add('error', 'the release APK is signed with the DEBUG key - the signing secrets were not applied');
   if (opts.kind === 'release' && !result.signer) add('error', 'the release APK is not signed');
 

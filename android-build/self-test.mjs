@@ -18,7 +18,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
   parseBadging, classifyPermissions, parseApksigner, parseManifestTree, assetlinksJson, formatFingerprint, isDebugCertificate, renderMarkdown,
-  readSigningBlockCertificates, signerFromApk
+  readSigningBlockCertificates, signerFromApk, parseSigningReport
 } from './audit-apk.mjs';
 import {
   checkXml, decodePng, cornerColor, patchManifestText, groovyBlock, ktsBlock, errorPageHtml, placeholderIndexHtml,
@@ -419,7 +419,9 @@ function xmllint(file) {
   check('gradle versionCode', gradle.includes('versionCode = 123') && gradle.includes('versionName = "1.1.0"'));
   check('gradle signing from env', gradle.includes("System.getenv('QR_KEYSTORE_PATH')") && gradle.includes("signingConfigs.getByName('qrRelease')"));
   check('gradle: original google-services block untouched', gradle.includes("apply plugin: 'com.google.gms.google-services'") && gradle.includes('apply from: \'capacitor.build.gradle\''));
-  check('gradle: no secrets or paths written', !/password\s*=\s*['"][^'"]+['"]/i.test(gradle));
+  // the only literal password allowed is the public debug-key default "android"; anything else would be a leaked secret
+  check('gradle: no secrets or paths written', !/password\s*=\s*['"](?!android['"])[^'"]+['"]/i.test(gradle));
+  check('gradle: fixed debug key wired to the environment', gradle.includes("System.getenv('QR_DEBUG_KEYSTORE_PATH')") && gradle.includes("keyAlias = 'androiddebugkey'"));
   const res = path.join(proj, 'android/app/src/main/res');
   const shortcuts = read(path.join(res, 'xml/shortcuts.xml'));
   check('shortcuts: app id substituted', !shortcuts.includes('__APP_ID__') && shortcuts.includes('android:targetClass="com.techverse.quranbangla.MainActivity"'));
@@ -605,6 +607,9 @@ function xmllint(file) {
   check('groovy: no template placeholders left', !/undefined|\$\{/.test(g));
   const k = ktsBlock({ versionName: '1.1.0', versionCode: '123' });
   check('kts: balanced braces', count(k, '{') === count(k, '}'));
+  check('groovy: debug signing uses the fixed key from the environment', /QR_DEBUG_KEYSTORE_PATH/.test(g) && /\bdebug\s*\{/.test(g) && /androiddebugkey/.test(g) && /storeFile = qrDebugKeystore/.test(g) && /\.android\/debug\.keystore/.test(g));
+  check('kts: debug signing uses the fixed key from the environment', /QR_DEBUG_KEYSTORE_PATH/.test(k) && /getByName\("debug"\)/.test(k) && /androiddebugkey/.test(k) && /\.android\/debug\.keystore/.test(k));
+  check('groovy: the debug key block comes before the release block', g.indexOf('qrDebugKeystore') < g.indexOf('qrKeystorePath'));
 }
 
 // ---------------------------------------------------------------------------------------- 11. APK audit parsers
@@ -711,6 +716,31 @@ Signer (minSdkVersion=24, maxSdkVersion=2147483647) certificate SHA-256 digest: 
     eq('junk file has no signer', signerFromApk(fJunk), null);
     eq('missing file has no signer', signerFromApk(path.join(TMP, 'does-not-exist.apk')), null);
     eq('signing block: nothing to read in a short buffer', readSigningBlockCertificates(Buffer.alloc(10)).length, 0);
+  // Gradle's own report of the debug key (diagnostic row in the audit)
+  {
+    const report = `> Task :app:signingReport
+Variant: debug
+Config: debug
+Store: /home/runner/.android/debug.keystore
+Alias: AndroidDebugKey
+MD5: 4C:36:7B:6C:25:3F:4E:2A:90:0B:AB:5B:5D:57:1E:11
+SHA1: 69:E7:76:E5:5B:99:EA:04:7D:09:F6:47:C7:CF:46:2C:A8:05:E8:EF
+SHA-256: ${REPO_KEY_SHA256}
+Valid until: Wednesday, 7 November 2054
+----------
+Variant: release
+Config: null
+----------
+Variant: debugAndroidTest
+Config: debug
+Store: /home/runner/.android/debug.keystore
+`;
+    const gr = parseSigningReport(report);
+    eq('signing report: store', gr && gr.store, '/home/runner/.android/debug.keystore');
+    eq('signing report: SHA-256', gr && gr.sha256, REPO_KEY_SHA256);
+    eq('signing report: alias', gr && gr.alias, 'AndroidDebugKey');
+    eq('signing report: nothing found in unrelated text', parseSigningReport('BUILD SUCCESSFUL'), null);
+  }
   }
   const tree = `N: android=http://schemas.android.com/apk/res/android (line=2)
   E: manifest (line=2)

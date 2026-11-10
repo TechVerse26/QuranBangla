@@ -425,6 +425,23 @@ export function groovyBlock({ versionName, versionCode }) {
     '    }',
     '}',
     '',
+    '// Debug signing: ONE fixed debug key. The workflow puts it at $HOME/.android/debug.keystore (QR_DEBUG_KEYSTORE_PATH can',
+    '// name another file). Naming the file here makes Gradle sign every debug build with it. Leaving it to the Android Gradle',
+    '// Plugin to find the file by itself ended in a different key for every build, and such a build never installs over the old one.',
+    "def qrDebugKeystore = new File(System.getenv('QR_DEBUG_KEYSTORE_PATH') ?: ((System.getenv('HOME') ?: System.getProperty('user.home')) + '/.android/debug.keystore'))",
+    'if (qrDebugKeystore.isFile()) {',
+    '    android {',
+    '        signingConfigs {',
+    '            debug {',
+    '                storeFile = qrDebugKeystore',
+    "                storePassword = 'android'",
+    "                keyAlias = 'androiddebugkey'",
+    "                keyPassword = 'android'",
+    '            }',
+    '        }',
+    '    }',
+    '}',
+    '',
     '// Release signing: the keystore and its passwords exist only as GitHub secrets and reach Gradle through environment',
     '// variables (see .github/workflows/build-apk.yml). Without them no release signing config is created.',
     "def qrKeystorePath = System.getenv('QR_KEYSTORE_PATH')",
@@ -456,6 +473,24 @@ export function ktsBlock({ versionName, versionCode }) {
     '    defaultConfig {',
     '        versionCode = ' + versionCode,
     '        versionName = "' + versionName + '"',
+    '    }',
+    '}',
+    '',
+    '// Debug signing: ONE fixed debug key (see the Groovy variant of this block for the reason).',
+    'val qrDebugKeystore = File(',
+    '    System.getenv(\"QR_DEBUG_KEYSTORE_PATH\")?.takeIf { it.isNotEmpty() }',
+    '        ?: ((System.getenv(\"HOME\") ?: System.getProperty(\"user.home\")) + \"/.android/debug.keystore\")',
+    ')',
+    'if (qrDebugKeystore.isFile) {',
+    '    android {',
+    '        signingConfigs {',
+    '            getByName(\"debug\") {',
+    '                storeFile = qrDebugKeystore',
+    '                storePassword = \"android\"',
+    '                keyAlias = \"androiddebugkey\"',
+    '                keyPassword = \"android\"',
+    '            }',
+    '        }',
     '    }',
     '}',
     '',
@@ -742,7 +777,7 @@ function patchGradle(ctx) {
   const block = (file.endsWith('.kts') ? ktsBlock : groovyBlock)({ versionName: ctx.S.versionName, versionCode: ctx.S.versionCode });
   s = s.replace(/\s*$/, '\n') + block;
   write(file, s);
-  return `${path.basename(file)}: versionName ${ctx.S.versionName}, versionCode ${ctx.S.versionCode}, release signing from environment`;
+  return `${path.basename(file)}: versionName ${ctx.S.versionName}, versionCode ${ctx.S.versionCode}, fixed debug key + release signing from environment`;
 }
 
 function readSdk(ctx) {
@@ -982,7 +1017,7 @@ function phaseAndroid(ctx) {
     ctx.log(`SDK levels from variables.gradle: min ${sdk.min}, compile ${sdk.compile}, target ${sdk.target}`);
     if (sdk.target && sdk.target < 35) ctx.warn(`targetSdkVersion is ${sdk.target}. Google Play requires a recent target API level for new apps and updates - check the current requirement in the Play Console before uploading.`);
   }
-  runStep(ctx, 'Gradle: version + release signing', () => patchGradle(ctx), { critical: true });
+  runStep(ctx, 'Gradle: version + signing', () => patchGradle(ctx), { critical: true });
   if (ctx.mode === 'full') {
     runStep(ctx, 'AndroidManifest.xml', () => patchManifest(ctx), { critical: true });
     runStep(ctx, 'Android resources', () => copyResources(ctx));
