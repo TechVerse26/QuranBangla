@@ -129,6 +129,18 @@ test('the vendor workflow starts by itself when the script is pushed, and cannot
   assert.doesNotMatch(paths, /assets\//, 'the files it commits must not be a trigger path');
 });
 
+test('the vendor workflow commits the files first; the real-runtime check comes after and can never block it', () => {
+  const y = read('.github/workflows/vendor-lottie.yml');
+  const commit = y.indexOf('- name: Commit the vendored files');
+  const check = y.indexOf('- name: Check the real animation with the real runtime');
+  assert.ok(commit > 0 && check > commit, 'commit step first, check step after it');
+  const checkStep = y.slice(check, y.indexOf('- name: Keep the rendered frames'));
+  assert.match(checkStep, /continue-on-error: true/);
+  assert.match(checkStep, /node --test tests\/ui\/splash\.real\.ui\.test\.js/);
+  assert.match(y, /uses: actions\/upload-artifact@v4[\s\S]*name: splash-real-frames/);
+  for (const f of ['tests/ui/splash.real.ui.test.js', 'tests/helpers/splash-harness.js']) assert.ok(exists(f), f + ' exists');
+});
+
 test('splash.js loads nothing from the internet (no CDN)', () => {
   assert.doesNotMatch(code('app/js/splash.js'), /https?:\/\//);
 });
