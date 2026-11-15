@@ -8,6 +8,11 @@ name: Vendor Lottie runtime
 # into assets/vendor/lottie/ and commits those files to the branch it ran on (Vercel then deploys them with the site). The
 # Android launch splash (app/js/splash.js) loads that file from the site itself - never from a CDN.
 #
+# After vendoring it also checks the real animation with the real runtime in headless Chromium (tests/ui/splash.real.ui.test.js:
+# plays once at 1x, logo drawn / filled, wordmark revealed, colours and position, offline start) and attaches the rendered frames
+# as the "splash-real-frames" artifact of the run. That check never blocks the vendoring: the files are committed first, and a
+# failing check only marks its own step - open the step log to see what differed.
+#
 # Safe to run again at any time: when the files are already up to date nothing is committed (so there is no loop - the
 # commit only touches assets/vendor/lottie/, which does not start this workflow). It does not build the APK.
 
@@ -50,3 +55,24 @@ jobs:
             git commit -m "Add the lottie-web runtime for the Android launch splash (vendored, version-pinned)"
             git push
           fi
+
+      - name: Check the real animation with the real runtime (Chromium)
+        id: real-check
+        continue-on-error: true
+        env:
+          SPLASH_FRAMES_DIR: ${{ runner.temp }}/splash-real-frames
+        run: |
+          mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw"
+          npm init -y >/dev/null
+          npm install playwright >/dev/null
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE"
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright" node --test tests/ui/splash.real.ui.test.js
+
+      - name: Keep the rendered frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: splash-real-frames
+          path: ${{ runner.temp }}/splash-real-frames
+          if-no-files-found: ignore
