@@ -1,0 +1,12 @@
+{
+  "name": "lottie-web",
+  "version": "5.12.2",
+  "build": "lottie_svg.min.js",
+  "source": "npm:lottie-web@5.12.2 (build/player/lottie_svg.min.js)",
+  "license": "MIT",
+  "licenseFile": "LICENSE.md",
+  "sha256": "c9cf6870d0cc66451d2d653063ddbf6f16b3f579425d7b6122c48987211385ed",
+  "bytes": 242469,
+  "npmIntegrity": "sha512-uvhvYPC8kGPjXT3MyKMrL3JitEAmDMp30lVkuq/590Mw9ok6pWcFCwXJveo0t5uqYw1UREQHofD+jVpdjBv8wg==",
+  "vendoredBy": "android-build/vendor-lottie.mjs"
+}
