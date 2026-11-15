@@ -59,13 +59,16 @@
   }
 
   // ---------- offline start ----------
-  // The website's service worker keeps the website files. The app UI files (and the public policy pages) are asked
-  // for once the app has started and is idle, so that the next cold start works without a connection as well.
+  // The website's service worker keeps the website files. The app UI files, the launch-splash files (splash script, Lottie
+  // runtime, animation JSON) and the public policy pages are asked for once the app has started and is idle, so that the
+  // next cold start works without a connection as well.
   // Best effort only: a missing service worker (or an unreachable file) never affects the running app.
   function precacheAppFiles(){
     try{
       if(!('serviceWorker' in navigator)) return;
-      var urls = (P.styles || []).concat(P.scripts || [], ['privacy.html', 'terms.html', 'account-deletion.html', 'css/legal.css', 'js/legal.js']);
+      var sp = (P.splash && P.splash.files) || {};
+      var urls = (P.styles || []).concat(P.scripts || [], [sp.script, sp.runtime, sp.data].filter(Boolean),
+        ['privacy.html', 'terms.html', 'account-deletion.html', 'css/legal.css', 'js/legal.js']);
       navigator.serviceWorker.ready.then(function(reg){
         var worker = (reg && reg.active) || navigator.serviceWorker.controller;
         if(worker) worker.postMessage({ type: 'CACHE_ASSETS', urls: urls });
