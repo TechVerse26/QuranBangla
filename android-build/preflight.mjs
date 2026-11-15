@@ -6,12 +6,14 @@
 //
 // Fails (exit 1) on things that would ship a broken app: a JavaScript syntax error, a missing app UI file, a missing
 // icon, a service-worker precache entry that does not exist (a 404 there makes the whole offline cache fail).
-// Warns about things that must be filled in before a Google Play release (contact e-mail on the policy pages).
+// Warns about things that must be filled in before a Google Play release (contact e-mail on the policy pages) and about a
+// missing lottie-web runtime (the Android launch splash then shows the static brand splash instead of the animation).
 // Only Node.js built-ins are used.
 // ---------------------------------------------------------------------------------------------------------------------
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -63,6 +65,55 @@ else {
   }
 }
 if (exists('index.html') && !/<script[^>]+src="js\/platform\.js"/.test(read('index.html'))) fail('index.html does not load js/platform.js (the app UI would never start)');
+
+// 2b. the Android launch splash (Lottie): the files js/platform.js hands to app/js/splash.js
+if (exists('js/platform.js')) {
+  const text = read('js/platform.js');
+  const m = /var SPLASH_FILES\s*=\s*\{([\s\S]*?)\}/.exec(text);
+  if (!m) fail('could not read SPLASH_FILES from js/platform.js (the Lottie launch splash would never start)');
+  else {
+    const files = Object.fromEntries([...m[1].matchAll(/(\w+)\s*:\s*'([^']+)'/g)].map((x) => [x[1], x[2]]));
+    for (const key of ['script', 'data', 'fallback']) {
+      if (!files[key]) fail(`SPLASH_FILES.${key} is missing in js/platform.js`);
+      else if (!exists(files[key])) fail(`launch splash file listed in js/platform.js does not exist: ${files[key]}`);
+    }
+    if (files.data && exists(files.data)) {
+      try {
+        const a = JSON.parse(read(files.data));
+        if (!Array.isArray(a.layers) || !a.layers.length || !(a.w > 0) || !(a.h > 0) || !(a.fr > 0) || !(a.op > a.ip)) fail(`${files.data} is not a usable Lottie animation (needs layers, w, h, fr and ip < op)`);
+        else console.log(`launch splash animation: ${a.w}x${a.h}, ${a.fr} fps, frames ${a.ip}-${a.op}, ${a.layers.length} layer(s)`);
+      } catch (e) { fail(`${files.data} is not valid JSON: ${e.message}`); }
+    }
+    // The runtime is served by the website, not packed into the APK, and the app has a static fallback - so a missing
+    // runtime is a warning (the animation would not play), never a build failure.
+    if (files.runtime) {
+      const dir = files.runtime.replace(/\/[^/]*$/, '');
+      if (!exists(files.runtime)) warn(`${files.runtime} is missing - the app will show the static brand splash instead of the animation. Add it with GitHub > Actions > "Vendor Lottie runtime" > Run workflow (or: node android-build/vendor-lottie.mjs) and deploy the site.`);
+      else {
+        const sha = crypto.createHash('sha256').update(fs.readFileSync(abs(files.runtime))).digest('hex');
+        if (!exists(dir + '/VERSION.json')) warn(`${dir}/VERSION.json is missing - the version and checksum of the lottie-web runtime are not recorded (run node android-build/vendor-lottie.mjs)`);
+        else {
+          try {
+            const v = JSON.parse(read(dir + '/VERSION.json'));
+            if (v.sha256 !== sha) fail(`${files.runtime} does not match the sha256 recorded in ${dir}/VERSION.json - the runtime file was changed by hand (re-run node android-build/vendor-lottie.mjs)`);
+            else console.log(`lottie-web runtime: ${v.name}@${v.version}, sha256 ${sha.slice(0, 12)}...`);
+          } catch (e) { fail(`${dir}/VERSION.json is not valid JSON: ${e.message}`); }
+        }
+        if (!['LICENSE.md', 'LICENSE', 'LICENSE.txt'].some((n) => exists(dir + '/' + n))) fail(`${dir} has no license file - the license of lottie-web has to be kept next to the code`);
+      }
+    }
+  }
+  // website isolation: nothing the website serves or precaches may mention the launch splash
+  for (const file of ['index.html', 'js/data.js', 'sw.js']) {
+    if (!exists(file)) continue;
+    let t = read(file);
+    if (file !== 'index.html') {
+      const lists = ['APP_SHELL_CORE', 'APP_SHELL_DEFERRED'].map((n) => { const x = new RegExp('(?:const|let|var)\\s+' + n + '\\s*=\\s*\\[([\\s\\S]*?)\\]\\s*;').exec(t); return x ? x[1] : ''; });
+      t = lists.join('\n');
+    }
+    if (/lottie|quran-bangla-splash|app\/js\/splash|assets\/animations/i.test(t)) fail(`${file} references the launch splash files - the normal website must never load them`);
+  }
+}
 
 // 3. the service worker precache lists point at real files
 for (const file of ['js/data.js', 'sw.js']) {
