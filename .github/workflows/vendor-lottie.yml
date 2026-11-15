@@ -1,0 +1,52 @@
+name: Vendor Lottie runtime
+
+# Puts the official, version-pinned lottie-web runtime into the repository, by itself - nothing to tap:
+#   * it starts automatically when android-build/vendor-lottie.mjs or this file is pushed (that is the push that brings the
+#     Android launch splash into the repository), and
+#   * it can be started by hand any time: Actions > Vendor Lottie runtime > Run workflow.
+# It downloads lottie-web from npm at the version pinned in android-build/vendor-lottie.mjs, copies the SVG player + the license
+# into assets/vendor/lottie/ and commits those files to the branch it ran on (Vercel then deploys them with the site). The
+# Android launch splash (app/js/splash.js) loads that file from the site itself - never from a CDN.
+#
+# Safe to run again at any time: when the files are already up to date nothing is committed (so there is no loop - the
+# commit only touches assets/vendor/lottie/, which does not start this workflow). It does not build the APK.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android-build/vendor-lottie.mjs'
+      - '.github/workflows/vendor-lottie.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vendor-lottie
+  cancel-in-progress: false
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download the pinned lottie-web package and copy the SVG player
+        run: node android-build/vendor-lottie.mjs
+
+      - name: Commit the vendored files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/vendor/lottie
+          if git diff --cached --quiet; then
+            echo "Nothing changed - the lottie-web runtime is already up to date."
+          else
+            git commit -m "Add the lottie-web runtime for the Android launch splash (vendored, version-pinned)"
+            git push
+          fi
