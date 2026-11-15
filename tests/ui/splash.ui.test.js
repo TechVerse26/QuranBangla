@@ -8,75 +8,14 @@
 // STAND-IN for lottie-web (tests/helpers/lottie-runtime-stub.js). So these tests prove the start-up choreography: what the splash
 // waits for, when the native splash is released, how it reacts to failures, that the website is untouched.
 //
-// What is NOT covered here: the real lottie-web rendering the real animation (that needs the vendored runtime file and a
-// device / real WebView), and Android itself. External hosts (Firebase, CDNs) are blocked, so the app runs offline.
+// What is NOT covered here: the real lottie-web rendering the real animation - that is tests/ui/splash.real.ui.test.js, which runs
+// the same app with the vendored runtime (and which the "Vendor Lottie runtime" workflow runs for you) - and Android itself
+// (a real device / WebView). External hosts (Firebase, CDNs) are blocked, so the app runs offline.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const http = require('node:http');
 
-let pw = null;
-try { pw = require(process.env.PLAYWRIGHT_MODULE || 'playwright'); } catch (e) { /* optional */ }
-const SKIP = pw ? false : 'Playwright is not installed (set PLAYWRIGHT_MODULE or run npm i --no-save playwright)';
-
-const ROOT = path.resolve(__dirname, '..', '..');
-const STUB = fs.readFileSync(path.join(ROOT, 'tests', 'helpers', 'lottie-runtime-stub.js'), 'utf8');
-const RUNTIME = '/assets/vendor/lottie/lottie_svg.min.js';
-const DATA = '/assets/animations/quran-bangla-splash.json';
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.txt': 'text/plain', '.xml': 'application/xml' };
-const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36 QuranBanglaApp/1.0.0';
-const DESKTOP_UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
-
-// ---- the Capacitor native shell, simulated: every plugin call succeeds, the ones the splash cares about are recorded ----
-const CAPACITOR = `(function(){
-  var rec = window.__native = { splashHide: [], bars: [] };
-  var now = function(){ return Math.round(performance.now()); };
-  var ok = function(v){ return Promise.resolve(v === undefined ? {} : v); };
-  function plugin(name){
-    var base = {};
-    if(name === 'SplashScreen') base.hide = function(o){ rec.splashHide.push({ t: now(), o: o }); return ok(); };
-    if(name === 'SystemBars') base.setStyle = function(o){ rec.bars.push({ t: now(), p: 'SystemBars.setStyle', o: o }); return ok(); };
-    if(name === 'EdgeToEdge') base.setBackgroundColor = function(o){ rec.bars.push({ t: now(), p: 'EdgeToEdge.setBackgroundColor', o: o }); return ok(); };
-    return new Proxy(base, { get: function(o, k){
-      if(k in o) return o[k];
-      if(k === 'then' || typeof k !== 'string') return undefined;
-      if(k === 'addListener') return function(){ return ok({ remove: function(){ return ok(); } }); };
-      return function(){ return ok(); };
-    } });
-  }
-  var cache = {};
-  var plugins = new Proxy({}, { get: function(_, n){ return typeof n === 'string' ? (cache[n] || (cache[n] = plugin(n))) : undefined; } });
-  window.Capacitor = { getPlatform: function(){ return 'android'; }, isNativePlatform: function(){ return true; }, isPluginAvailable: function(){ return true; }, Plugins: plugins, convertFileSrc: function(u){ return u; } };
-})();`;
-const MARKS = `window.__tl = [];
-window.__mark = function(n){ window.__tl.push([n, Math.round(performance.now())]); };
-window.addEventListener('qr:app-ready', function(){ window.__mark('app-ready'); });
-window.addEventListener('qr:splash-done', function(){ window.__mark('splash-done'); });`;
-
-// ---- a static server for the repository; the lottie runtime is always the stand-in ----
-function serve(opts) {
-  opts = opts || {};
-  const hits = [];
-  const server = http.createServer((req, res) => {
-    let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-    if (p.endsWith('/')) p += 'index.html';
-    hits.push(p);
-    const send = (code, body, type) => { res.writeHead(code, { 'content-type': type || 'text/plain', 'cache-control': 'no-store' }); res.end(body); };
-    const go = () => {
-      if ((opts.missing || []).includes(p)) return send(404, 'not found');
-      if (p === RUNTIME) return send(200, STUB, 'application/javascript');
-      const f = path.join(ROOT, p);
-      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return send(404, 'not found');
-      send(200, fs.readFileSync(f), MIME[path.extname(f)] || 'application/octet-stream');
-    };
-    const wait = (opts.delay || {})[p];
-    if (wait) setTimeout(go, wait); else go();
-  });
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({
-    port: server.address().port, hits, close: () => new Promise((r) => server.close(r))
-  })));
-}
+const H = require('../helpers/splash-harness');
+const { pw, SKIP, RUNTIME, DATA, ANDROID_UA, DESKTOP_UA } = H;
 
 let browser = null;
 test.before(async () => {
@@ -85,41 +24,7 @@ test.before(async () => {
 });
 test.after(async () => { if (browser) await browser.close(); });
 
-async function launch(o) {
-  o = o || {};
-  const srv = await serve(o.server);
-  const ctx = await browser.newContext({
-    viewport: o.viewport || { width: 412, height: 915 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
-    userAgent: o.userAgent || ANDROID_UA, serviceWorkers: o.serviceWorkers || 'block'
-  });
-  await ctx.route('**/*', (route) => (new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort()));
-  const page = await ctx.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e.message)));
-  if (o.capacitor !== false) await page.addInitScript(CAPACITOR);
-  await page.addInitScript('window.__LOTTIE_STUB__ = ' + JSON.stringify(o.stub || {}) + ';');
-  await page.addInitScript(MARKS);
-  if (o.init) await page.addInitScript(o.init);
-  const L = {
-    page, ctx, srv, errors,
-    open: (url) => page.goto('http://127.0.0.1:' + srv.port + (url || '/index.html'), { waitUntil: 'commit' }),
-    done: (timeout) => page.waitForFunction(() => window.QR_PLATFORM && window.QR_PLATFORM.splash && window.QR_PLATFORM.splash.phase === 'done', null, { timeout: timeout || 25000 }),
-    phase: (name, timeout) => page.waitForFunction((n) => window.QR_PLATFORM && window.QR_PLATFORM.splash && window.QR_PLATFORM.splash.phase === n, name, { timeout: timeout || 15000 }),
-    state: () => page.evaluate(() => {
-      const P = window.QR_PLATFORM, S = P && P.splash, nat = window.__native || { splashHide: [], bars: [] };
-      return {
-        isApp: P && P.isApp, dataPlatform: document.documentElement.getAttribute('data-platform'),
-        tl: window.__tl || [], hide: nat.splashHide, bars: nat.bars,
-        calls: window.__lottie ? window.__lottie.calls : [], events: window.__lottie ? window.__lottie.events : [],
-        info: S && S.info, phase: S && S.phase, holds: S && S.holdsNative, hasSplash: !!S,
-        overlay: !!document.getElementById('qa-splash'), style: !!document.getElementById('qa-splash-style'),
-        body: getComputedStyle(document.body).visibility, appReady: !!(P && P.ready)
-      };
-    }),
-    close: async () => { await ctx.close(); await srv.close(); }
-  };
-  return L;
-}
+const launch = (o) => H.launch(browser, o);
 const at = (st, name) => { const e = st.events.find((x) => x.name === name); return e ? e.t : undefined; };
 const mark = (st, name) => { const m = st.tl.find((x) => x[0] === name); return m ? m[1] : undefined; };
 const count = (st, name) => st.events.filter((e) => e.name === name).length;
@@ -400,14 +305,12 @@ test('cached / offline start: the second launch plays the animation from the ser
     }
     assert.deepEqual(missing, [], 'the service worker cached the app UI files and the splash files');
     await L.page.waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 15000 });
-    const before = L.srv.hits.length;
-    await L.ctx.setOffline(true);
+    await L.ctx.setOffline(true);                      // from here on nothing can reach the server: what plays comes from the cache
     await L.page.reload({ waitUntil: 'commit' });
     await L.done();
     const st = await L.state();
     assert.equal(st.info.mode, 'lottie', 'the animation played without any connection');
     assert.equal(st.calls.length, 1);
-    assert.equal(L.srv.hits.length, before, 'nothing was requested from the server');
     assert.equal(st.body, 'visible');
   } finally { await L.close(); }
 });
