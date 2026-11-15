@@ -28,6 +28,10 @@
 // Safety net: if the app UI layer fails to start within a few seconds the
 // page is reloaded once into the plain website UI for the rest of that app
 // session, so a broken app layer can never leave the user with a blank screen.
+//
+// Launch splash: in the app only (see step 1c below and app/js/splash.js) the original Lottie
+// animation is played on a white overlay while the app UI starts behind it. The website never
+// loads, references or creates any of it.
 (function(){
   'use strict';
   if(window.QR_PLATFORM) return;
@@ -165,8 +169,9 @@
     P.ready = true;
     root.classList.add('qa-ready');
     clearTimeout(watchdog);
-    // let the first app frame paint, then release the native splash screen
-    requestAnimationFrame(function(){ setTimeout(hideSplash, 60); });
+    // let the first app frame paint, then release the native splash screen - unless the Lottie launch splash (step 1c) is
+    // still holding it: that one releases the native splash itself as soon as its first frame is on screen
+    requestAnimationFrame(function(){ setTimeout(function(){ if(!(P.splash && P.splash.holdsNative)) hideSplash(); }, 60); });
     readyResolvers.splice(0).forEach(function(r){ r(P); });
     try{ w.dispatchEvent(new CustomEvent('qr:app-ready')); }catch(e){}
   };
@@ -208,6 +213,58 @@
       w.history.replaceState(w.history.state, '', w.location.pathname + (rest ? '?' + rest : '') + w.location.hash);
     }
   }catch(e){ P.launch = P.launch || { shortcut: '', search: '' }; }
+
+  // 1c) Lottie launch splash (Android app only). app/js/splash.js is injected right here - and deliberately NOT listed in
+  //     APP_SCRIPTS, which only run after DOMContentLoaded - so the animation starts as early as the page allows. It draws a
+  //     white overlay with the original animation (assets/animations/quran-bangla-splash.json, rendered by the bundled
+  //     lottie-web runtime), releases the native splash screen once the first frame is on screen, and removes itself when the
+  //     animation has finished AND the app UI is ready (markReady below). Until it has released the native splash,
+  //     P.splash.holdsNative stops markReady() from doing so.
+  //     This file keeps the safety net: if splash.js cannot be loaded (or does not start in time) the hold is dropped and the
+  //     app starts exactly as before; whatever happens, the overlay is force-removed after SPLASH_LAST_RESORT_MS.
+  //     The files are listed here only, so the website never references them.
+  var SPLASH_FILES = {
+    script: 'app/js/splash.js',
+    runtime: 'assets/vendor/lottie/lottie_svg.min.js',        // lottie-web, SVG renderer, version-pinned (assets/vendor/lottie/VERSION.json)
+    data: 'assets/animations/quran-bangla-splash.json',        // the original animation, unmodified
+    fallback: 'icons/icon-512.png'                             // static brand splash when the animation cannot be played
+  };
+  var SPLASH_START_TIMEOUT_MS = 5000;
+  var SPLASH_LAST_RESORT_MS = 16000;
+  var splash = P.splash = { holdsNative: !!P.isNative, started: false, gaveUp: false, files: SPLASH_FILES };
+  (function startSplash(){
+    var host = d.head || root;
+    function giveUp(why){
+      if(splash.started || splash.gaveUp) return;
+      splash.gaveUp = true;
+      splash.holdsNative = false;
+      try{ console.warn('[platform] launch splash skipped:', why); }catch(e){}
+      if(P.ready) hideSplash();
+    }
+    function lastResort(){
+      var ov = d.getElementById('qa-splash'), st = d.getElementById('qa-splash-style');
+      if(ov && ov.parentNode) ov.parentNode.removeChild(ov);
+      if(st && st.parentNode) st.parentNode.removeChild(st);
+      splash.holdsNative = false;
+      hideSplash();
+    }
+    // the runtime and the animation download while splash.js itself is still on its way
+    [{ rel: 'preload', as: 'script', href: SPLASH_FILES.runtime },
+     { rel: 'preload', as: 'fetch', href: SPLASH_FILES.data, crossorigin: 'anonymous' }].forEach(function(attrs){
+      var l = d.createElement('link');
+      for(var k in attrs) l.setAttribute(k, attrs[k]);
+      l.setAttribute('data-qa-asset', '1');
+      host.appendChild(l);
+    });
+    var s = d.createElement('script');
+    s.src = SPLASH_FILES.script;
+    s.async = true;
+    s.setAttribute('data-qa-asset', '1');
+    s.onerror = function(){ giveUp('app/js/splash.js failed to load'); };
+    host.appendChild(s);
+    setTimeout(function(){ giveUp('app/js/splash.js did not start'); }, SPLASH_START_TIMEOUT_MS);
+    setTimeout(lastResort, SPLASH_LAST_RESORT_MS);
+  })();
 
   // 2) Website tours are not used in the app.
   WEB_TOURS.forEach(function(n){ storageSet('localStorage', 'qb_onb_seen_' + n, '1'); });
@@ -255,6 +312,7 @@
     P.failed = true;
     try{ console.error('[platform] app UI failed to start:', reason); }catch(e){}
     storageSet('sessionStorage', 'qa_disabled', '1');
+    if(P.splash) P.splash.holdsNative = false;
     hideSplash();
     try{ w.location.reload(); }catch(e){}
   };
