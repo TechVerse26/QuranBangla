@@ -64,7 +64,7 @@ assets/vendor/lottie/VERSION.json        ← ভার্সন + sha256 (prefli
 - `assets/animations/quran-bangla-splash.json` — আপনার অ্যানিমেশন, বাইট-বাই-বাইট অপরিবর্তিত
 - `app/js/splash.js` — splash নিয়ন্ত্রণ (শুধু অ্যাপে)
 - `android-build/vendor-lottie.mjs`, `.github/workflows/vendor-lottie.yml` — runtime বসানোর স্ক্রিপ্ট/workflow
-- `tests/splash.test.js`, `tests/ui/splash.ui.test.js`, `tests/helpers/lottie-runtime-stub.js` — টেস্ট
+- `tests/splash.test.js`, `tests/ui/splash.ui.test.js`, `tests/ui/splash.real.ui.test.js`, `tests/helpers/splash-harness.js`, `tests/helpers/lottie-runtime-stub.js` — টেস্ট
 - `assets/vendor/lottie/*` — (§১ এর কাজের পর)
 
 **পরিবর্তিত**
@@ -85,12 +85,15 @@ assets/vendor/lottie/VERSION.json        ← ভার্সন + sha256 (prefli
 
 ```bash
 npm test                                   # স্ট্যাটিক টেস্ট (দ্রুত, browser লাগে না)
-node --test tests/ui/splash.ui.test.js     # আসল অ্যাপ + simulated Android shell (Playwright + Chromium লাগে)
+node --test tests/ui/splash.ui.test.js     # আসল অ্যাপ + simulated Android shell, lottie এর নকল দিয়ে (Playwright + Chromium লাগে)
+node --test tests/ui/splash.real.ui.test.js  # আসল অ্যাপ + আসল lottie-web: অ্যানিমেশন সত্যিই ঠিকমতো আঁকছে কিনা
 node android-build/preflight.mjs           # build এর আগের যাচাই
 node android-build/self-test.mjs           # build স্ক্রিপ্ট self-test
 ```
 
-browser টেস্টে lottie-web এর বদলে `tests/helpers/lottie-runtime-stub.js` (ছোট নকল) ব্যবহার হয় — এটা শুধু প্রমাণ করে splash কখন কী করে। **আসল অ্যানিমেশন আসল WebView তে কেমন দেখায়** তা একটা ডিভাইসে নিজে দেখে নিন।
+**আসল lottie-web দিয়ে যাচাই নিজে নিজে হয়:** runtime বসানোর পর **Vendor Lottie runtime** workflow একই run-এ `splash.real.ui.test.js` চালায় (GitHub-এর সার্ভারে, headless Chromium)। এটা পিক্সেল ধরে দেখে: প্রথম ফ্রেম সাদা → লোগো আঁকা → সবুজে ভরা → wordmark ফোটা → শেষ ফ্রেম স্থির; ১x গতি, একবারই চলা, রঙ অপরিবর্তিত, গ্র্যাডিয়েন্ট/glow/shadow নেই, লোগো ও লেখা ঠিক জায়গায় (কেন্দ্রে), আর অফলাইনেও চলে। ফলাফল দেখতে: GitHub → **Actions** → সেই run → ধাপ **Check the real animation…** (সবুজ টিক = পাস)। রেন্ডার হওয়া আসল ফ্রেমের ছবি একই run-এর **Artifacts → `splash-real-frames`** এ থাকে। এই ধাপ fail করলেও runtime commit হয়ে যায় (ধাপটা আলাদা ও non-blocking) — লগ দেখলেই বোঝা যাবে কোথায় তফাত।
+
+`splash.ui.test.js` এ lottie-web এর বদলে `tests/helpers/lottie-runtime-stub.js` (ছোট নকল) ব্যবহার হয় — সেটা প্রমাণ করে splash কখন কী করে (native splash কখন সরে, কীসের জন্য অপেক্ষা করে, ব্যর্থ হলে কী হয়, ওয়েবসাইট অপরিবর্তিত)। **আসল Android ডিভাইসে আসল WebView তে কেমন দেখায়** তা একটা ফোনে নিজে দেখে নিন।
 
 ## ৮. ডিভাইসে যাচাই / ডিবাগ
 
